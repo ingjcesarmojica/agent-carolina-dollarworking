@@ -426,14 +426,16 @@ def upload_knowledge():
         tmp_dir = tempfile.mkdtemp()
         tmp_path = os.path.join(tmp_dir, file.filename)
         file.save(tmp_path)
+        app.logger.info(f"PDF guardado temporalmente en: {tmp_path}")
         num_chunks, msg = add_pdf(tmp_path)
+        app.logger.info(f"Resultado add_pdf: {msg}")
         os.remove(tmp_path)
         os.rmdir(tmp_dir)
         if num_chunks == 0:
             return jsonify({"error": msg}), 400
         return jsonify({"message": msg, "chunks": num_chunks})
     except Exception as e:
-        app.logger.error(f"Error uploading PDF: {str(e)}")
+        app.logger.error(f"Error uploading PDF: {str(e)}", exc_info=True)
         return jsonify({"error": f"Error al procesar el PDF: {str(e)}"}), 500
 
 

@@ -1,8 +1,10 @@
 import os
+import logging
 import pdfplumber
 from pinecone import Pinecone, ServerlessSpec
-from google.generativeai import GenerativeModel
 import google.generativeai as genai
+
+logger = logging.getLogger(__name__)
 
 
 INDEX_NAME = "tusabogados-laboral"
@@ -12,38 +14,51 @@ DIMENSION = 768
 def get_pc():
     api_key = os.environ.get("PINECONE_API_KEY", "")
     if not api_key:
+        logger.error("PINECONE_API_KEY no configurada")
         return None
-    return Pinecone(api_key=api_key)
+    try:
+        pc = Pinecone(api_key=api_key)
+        logger.info("Pinecone conectado exitosamente")
+        return pc
+    except Exception as e:
+        logger.error(f"Error conectando a Pinecone: {e}")
+        return None
 
 
 def get_index():
     pc = get_pc()
     if pc is None:
         return None
-    existing = pc.list_indexes()
-    index_names = [idx.name for idx in existing.indexes]
-    if INDEX_NAME not in index_names:
-        pc.create_index(
-            name=INDEX_NAME,
-            dimension=DIMENSION,
-            metric="cosine",
-            spec=ServerlessSpec(cloud="aws", region="us-east-1")
-        )
-    return pc.Index(INDEX_NAME)
+    try:
+        existing = pc.list_indexes()
+        index_names = [idx.name for idx in existing.indexes]
+        logger.info(f"Índices existentes: {index_names}")
+        if INDEX_NAME not in index_names:
+            logger.info(f"Creando índice {INDEX_NAME}...")
+            pc.create_index(
+                name=INDEX_NAME,
+                dimension=DIMENSION,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+            )
+            logger.info(f"Índice {INDEX_NAME} creado")
+        return pc.Index(INDEX_NAME)
+    except Exception as e:
+        logger.error(f"Error obteniendo índice: {e}")
+        return None
 
 
 def get_embedding(text):
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
+        logger.error("GEMINI_API_KEY no configurada")
         return None
     try:
         genai.configure(api_key=api_key)
-        result = genai.embed_content(
-            model="models/text-embedding-004",
-            content=text
-        )
+        result = genai.embed_content(model="models/text-embedding-004", content=text)
         return result["embedding"]
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error generando embedding: {e}")
         return None
 
 
@@ -65,7 +80,7 @@ def chunk_text(text, chunk_size=800, overlap=150):
         chunk = text[start:end]
         last_period = chunk.rfind(".")
         if last_period > chunk_size * 0.4:
-            chunk = chunk[:last_period + 1]
+            chunk = chunk[: last_period + 1]
             end = start + last_period + 1
         chunks.append(chunk.strip())
         start = end - overlap
@@ -98,25 +113,29 @@ def add_pdf(pdf_path, source_name=None):
         embedding = get_embedding(chunk)
         if embedding is None:
             continue
-        vectors.append({
-            "id": f"{source_name}_{i}",
-            "values": embedding,
-            "metadata": {
-                "source": source_name,
-                "chunk_index": i,
-                "text": chunk[:1000]
+        vectors.append(
+            {
+                "id": f"{source_name}_{i}",
+                "values": embedding,
+                "metadata": {
+                    "source": source_name,
+                    "chunk_index": i,
+                    "text": chunk[:1000],
+                },
             }
-        })
+        )
 
     if not vectors:
         return 0, "No se pudieron generar embeddings para el PDF."
 
     batch_size = 100
     for i in range(0, len(vectors), batch_size):
-        batch = vectors[i:i + batch_size]
+        batch = vectors[i : i + batch_size]
         index.upsert(vectors=batch)
 
-    return len(vectors), f"PDF '{source_name}' procesado: {len(vectors)} fragmentos indexados."
+    return len(
+        vectors
+    ), f"PDF '{source_name}' procesado: {len(vectors)} fragmentos indexados."
 
 
 def search_knowledge(query, n_results=3):
@@ -136,18 +155,18 @@ def search_knowledge(query, n_results=3):
         return []
 
     results = index.query(
-        vector=query_embedding,
-        top_k=n_results,
-        include_metadata=True
+        vector=query_embedding, top_k=n_results, include_metadata=True
     )
 
     docs = []
     for match in results.matches:
         metadata = match.metadata
-        docs.append({
-            "text": metadata.get("text", ""),
-            "source": metadata.get("source", "desconocido")
-        })
+        docs.append(
+            {
+                "text": metadata.get("text", ""),
+                "source": metadata.get("source", "desconocido"),
+            }
+        )
     return docs
 
 
@@ -173,11 +192,7 @@ def list_documents():
         pass
 
     try:
-        scan = index.query(
-            vector=[0] * DIMENSION,
-            top_k=10000,
-            include_metadata=True
-        )
+        scan = index.query(vector=[0] * DIMENSION, top_k=10000, include_metadata=True)
         for match in scan.matches:
             sources.add(match.metadata.get("source", "desconocido"))
     except Exception:
