@@ -62,8 +62,8 @@ def get_embedding(text):
         return None
 
 
-def chunk_text(text, chunk_size=600, overlap=100):
-    """Split text into smaller chunks for lower memory usage."""
+def chunk_text(text, chunk_size=1500, overlap=200):
+    """Split text into chunks - larger chunks = fewer API calls = faster processing."""
     chunks = []
     start = 0
     while start < len(text):
@@ -75,7 +75,7 @@ def chunk_text(text, chunk_size=600, overlap=100):
             end = start + last_period + 1
         chunks.append(chunk.strip())
         start = end - overlap
-    return [c for c in chunks if len(c) > 50]
+    return [c for c in chunks if len(c) > 100]
 
 
 def add_pdf(pdf_path, source_name=None):
