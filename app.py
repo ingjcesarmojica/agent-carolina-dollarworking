@@ -5,6 +5,7 @@ import base64
 import re
 import json
 import tempfile
+import threading
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import logging
@@ -411,6 +412,18 @@ He revisado su caso de {subtype}. Un abogado laboralista se comunicará con uste
         return jsonify({"error": str(e)}), 500
 
 
+def process_pdf_background(tmp_path, filename):
+    """Process PDF in background thread to avoid timeout."""
+    try:
+        app.logger.info(f"Processing PDF in background: {filename}")
+        num_chunks, msg = add_pdf(tmp_path)
+        app.logger.info(f"Background processing result: {msg}")
+        os.remove(tmp_path)
+        os.rmdir(os.path.dirname(tmp_path))
+    except Exception as e:
+        app.logger.error(f"Background PDF processing error: {str(e)}", exc_info=True)
+
+
 @app.route("/api/knowledge/upload", methods=["POST"])
 def upload_knowledge():
     if not RAG_AVAILABLE:
@@ -439,17 +452,24 @@ def upload_knowledge():
         tmp_dir = tempfile.mkdtemp()
         tmp_path = os.path.join(tmp_dir, file.filename)
         file.save(tmp_path)
-        app.logger.info(f"PDF guardado temporalmente en: {tmp_path}")
-        num_chunks, msg = add_pdf(tmp_path)
-        app.logger.info(f"Resultado add_pdf: {msg}")
-        os.remove(tmp_path)
-        os.rmdir(tmp_dir)
-        if num_chunks == 0:
-            return jsonify({"error": msg}), 400
-        return jsonify({"message": msg, "chunks": num_chunks})
+        app.logger.info(f"PDF saved temporarily: {tmp_path}")
+
+        # Process in background thread to avoid Render's 60s timeout
+        thread = threading.Thread(
+            target=process_pdf_background, args=(tmp_path, file.filename)
+        )
+        thread.daemon = True
+        thread.start()
+
+        return jsonify(
+            {
+                "message": f"PDF '{file.filename}' recibido. Procesando en segundo plano...",
+                "status": "processing",
+            }
+        )
     except Exception as e:
         app.logger.error(f"Error uploading PDF: {str(e)}", exc_info=True)
-        return jsonify({"error": f"Error al procesar el PDF: {str(e)}"}), 500
+        return jsonify({"error": f"Error al recibir el PDF: {str(e)}"}), 500
 
 
 @app.route("/api/knowledge/documents", methods=["GET"])
