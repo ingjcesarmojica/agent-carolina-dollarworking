@@ -314,11 +314,36 @@ def chat():
 
         if is_question and not is_greeting and not is_farewell:
             context = f"Usuario: {getattr(chat, 'user_name', 'nuevo usuario')}. Pregunta libre sobre derecho laboral."
-            gemini_resp = gemini_response(message, context=context)
-            if gemini_resp:
-                response = f"{gemini_resp}\n\n¿Hay algo más en lo que pueda asistirle?"
+
+            # Try RAG first, then Gemini
+            rag_response = None
+            if RAG_AVAILABLE:
+                try:
+                    docs = search_knowledge(message, n_results=3)
+                    app.logger.info(
+                        f"RAG search: {len(docs)} docs found for '{message[:50]}'"
+                    )
+                    if docs:
+                        rag_parts = []
+                        for d in docs:
+                            rag_parts.append(f"[Fuente: {d['source']}]\n{d['text']}")
+                        rag_context = "\n---\n".join(rag_parts)
+                        rag_response = (
+                            f"Según la información disponible:\n\n{rag_context}"
+                        )
+                except Exception as e:
+                    app.logger.error(f"RAG error in chat: {e}")
+
+            if rag_response:
+                response = f"{rag_response}\n\n¿Hay algo más en lo que pueda asistirle?"
             else:
-                response = "Le comento que no tengo información específica sobre esa consulta. Un abogado laboralista podrá orientarle personalmente. ¿Desea agendar una cita?"
+                gemini_resp = gemini_response(message, context=context)
+                if gemini_resp:
+                    response = (
+                        f"{gemini_resp}\n\n¿Hay algo más en lo que pueda asistirle?"
+                    )
+                else:
+                    response = "Le comento que no tengo información específica sobre esa consulta. Un abogado laboralista podrá orientarle personalmente. ¿Desea agendar una cita?"
             return jsonify({"response": response, "end_call": False})
 
         if is_farewell:
