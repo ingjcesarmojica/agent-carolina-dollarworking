@@ -278,6 +278,46 @@ def chat():
             response = "Buenos días. Soy Claudia García, abogada laboralista de TusAbogados.com. Le comento que estamos aquí para asistirle con su caso. Para iniciar con su consulta, ¿podría indicarme su nombre completo?"
             return jsonify({"response": response, "end_call": False})
 
+        is_question = any(
+            word in message_lower
+            for word in [
+                "¿",
+                "?",
+                "qué",
+                "que",
+                "cómo",
+                "como",
+                "cuál",
+                "cual",
+                "cuáles",
+                "cuales",
+                "cuánto",
+                "cuanto",
+                "dónde",
+                "donde",
+                "quién",
+                "quien",
+                "por qué",
+                "por que",
+                "para qué",
+                "explica",
+                "explicame",
+                "háblame",
+                "hablame",
+                "cuéntame",
+                "cuentame",
+            ]
+        )
+
+        if is_question and not is_greeting and not is_farewell:
+            context = f"Usuario: {getattr(chat, 'user_name', 'nuevo usuario')}. Pregunta libre sobre derecho laboral."
+            gemini_resp = gemini_response(message, context=context)
+            if gemini_resp:
+                response = f"{gemini_resp}\n\n¿Hay algo más en lo que pueda asistirle?"
+            else:
+                response = "Le comento que no tengo información específica sobre esa consulta. Un abogado laboralista podrá orientarle personalmente. ¿Desea agendar una cita?"
+            return jsonify({"response": response, "end_call": False})
+
         if is_farewell:
             name = getattr(chat, "user_name", "")
             if hasattr(chat, "appointment_time"):
