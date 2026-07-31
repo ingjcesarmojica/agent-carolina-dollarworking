@@ -576,6 +576,44 @@ def test_search():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/pinecone-status", methods=["GET"])
+def pinecone_status():
+    """Check Pinecone index status directly."""
+    if not RAG_AVAILABLE:
+        return jsonify({"error": "RAG not available"}), 500
+    try:
+        from rag import get_pc, get_index, INDEX_NAME, DIMENSION
+
+        pc = get_pc()
+        if pc is None:
+            return jsonify({"error": "Pinecone not connected"}), 500
+
+        existing = pc.list_indexes()
+        index_names = [idx.name for idx in existing.indexes]
+
+        if INDEX_NAME not in index_names:
+            return jsonify(
+                {"status": "no_index", "indexes": index_names, "expected": INDEX_NAME}
+            )
+
+        idx = pc.Index(INDEX_NAME)
+        stats = idx.describe_index_stats().result()
+
+        return jsonify(
+            {
+                "status": "ok",
+                "index": INDEX_NAME,
+                "dimension": DIMENSION,
+                "total_vectors": stats.total_vector_count,
+                "namespaces": {k: v.vector_count for k, v in stats.namespaces.items()}
+                if stats.namespaces
+                else {},
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/voices", methods=["GET"])
 def list_voices():
     voices = [
