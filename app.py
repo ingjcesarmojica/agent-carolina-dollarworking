@@ -4,12 +4,20 @@ import asyncio
 import base64
 import re
 import json
+import tempfile
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import logging
 import edge_tts
 import google.generativeai as genai
 from dotenv import load_dotenv
+
+try:
+    from rag import search_knowledge, add_pdf, list_documents, delete_document
+
+    RAG_AVAILABLE = True
+except ImportError:
+    RAG_AVAILABLE = False
 
 load_dotenv()
 
@@ -98,7 +106,7 @@ def gemini_response(user_message, context=""):
 
 ## Tu personalidad
 - Eres una abogada laboralista con experiencia.
-- Hablas con professionalism y calidez, como lo haría un abogado real.
+- Hablas con profesionalismo y calidez, como lo haría un abogado real.
 - Usas terminología legal cuando es apropiado, pero la explicas en lenguaje sencillo.
 - Transmites confianza, seguridad y empatía.
 - Ejemplos de expresiones naturales: "Entiendo perfectamente su situación", "Esto es algo que manejamos con frecuencia", "Le comento que en estos casos...", "Es importante que sepa que...", "Procederemos a..."
@@ -110,7 +118,22 @@ def gemini_response(user_message, context=""):
 - Siempre orienta pero NO das asesoría legal definitiva, eso lo hace el abogado humano.
 - Nunca uses expresiones informales como "genial", "perfecto", "listo", "dale". Usa: "Entiendo", "Comprendo", "Procederé a", "Le comento que"."""
 
-        prompt = f"""{system_prompt}
+        rag_context = ""
+        if RAG_AVAILABLE:
+            try:
+                docs = search_knowledge(user_message, n_results=3)
+                if docs:
+                    rag_parts = []
+                    for d in docs:
+                        rag_parts.append(f"[Fuente: {d['source']}]\n{d['text']}")
+                    rag_context = (
+                        "\n\n## Base de conocimiento (usa esta información si es relevante):\n"
+                        + "\n---\n".join(rag_parts)
+                    )
+            except Exception:
+                pass
+
+        prompt = f"""{system_prompt}{rag_context}
 
 Contexto: {context}
 Usuario: {user_message}"""
@@ -386,6 +409,54 @@ He revisado su caso de {subtype}. Un abogado laboralista se comunicará con uste
     except Exception as e:
         app.logger.error(f"Exception in chat: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/knowledge/upload", methods=["POST"])
+def upload_knowledge():
+    if not RAG_AVAILABLE:
+        return jsonify(
+            {"error": "Módulo RAG no disponible. Instale chromadb y pdfplumber."}
+        ), 500
+    if "file" not in request.files:
+        return jsonify({"error": "No se envió ningún archivo."}), 400
+    file = request.files["file"]
+    if not file.filename.endswith(".pdf"):
+        return jsonify({"error": "Solo se permiten archivos PDF."}), 400
+    try:
+        tmp_dir = tempfile.mkdtemp()
+        tmp_path = os.path.join(tmp_dir, file.filename)
+        file.save(tmp_path)
+        num_chunks, msg = add_pdf(tmp_path)
+        os.remove(tmp_path)
+        os.rmdir(tmp_dir)
+        if num_chunks == 0:
+            return jsonify({"error": msg}), 400
+        return jsonify({"message": msg, "chunks": num_chunks})
+    except Exception as e:
+        app.logger.error(f"Error uploading PDF: {str(e)}")
+        return jsonify({"error": f"Error al procesar el PDF: {str(e)}"}), 500
+
+
+@app.route("/api/knowledge/documents", methods=["GET"])
+def list_knowledge():
+    if not RAG_AVAILABLE:
+        return jsonify({"documents": [], "rag_available": False})
+    docs = list_documents()
+    return jsonify({"documents": docs, "rag_available": True})
+
+
+@app.route("/api/knowledge/delete", methods=["POST"])
+def delete_knowledge():
+    if not RAG_AVAILABLE:
+        return jsonify({"error": "Módulo RAG no disponible."}), 500
+    data = request.json
+    source = data.get("source", "")
+    if not source:
+        return jsonify({"error": "Nombre del documento no proporcionado."}), 400
+    success, msg = delete_document(source)
+    if success:
+        return jsonify({"message": msg})
+    return jsonify({"error": msg}), 404
 
 
 @app.route("/api/health", methods=["GET"])
