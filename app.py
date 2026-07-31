@@ -562,6 +562,20 @@ def test_embedding():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/test-search", methods=["POST"])
+def test_search():
+    """Test RAG search directly."""
+    if not RAG_AVAILABLE:
+        return jsonify({"error": "RAG not available"}), 500
+    data = request.json or {}
+    query = data.get("query", "Convención de Viena tratados")
+    try:
+        docs = search_knowledge(query, n_results=3)
+        return jsonify({"query": query, "results": docs, "count": len(docs)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/voices", methods=["GET"])
 def list_voices():
     voices = [
