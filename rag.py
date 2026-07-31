@@ -55,10 +55,13 @@ def get_embedding(text):
         return None
     try:
         genai.configure(api_key=api_key)
-        result = genai.embed_content(model="models/text-embedding-004", content=text)
+        # Truncate text to 2000 chars to avoid API limits
+        result = genai.embed_content(
+            model="models/text-embedding-004", content=text[:2000]
+        )
         return result["embedding"]
     except Exception as e:
-        logger.error(f"Error generando embedding: {e}")
+        logger.error(f"Error generando embedding: {e}", exc_info=True)
         return None
 
 
@@ -100,21 +103,28 @@ def add_pdf(pdf_path, source_name=None):
             logger.info(f"PDF tiene {total_pages} páginas")
 
             chunk_count = 0
+            embedding_errors = 0
             batch_vectors = []
-            batch_size = 20  # Smaller batches for less memory
+            batch_size = 20
 
             for page_num in range(total_pages):
                 try:
                     page = reader.pages[page_num]
                     page_text = page.extract_text()
                     if not page_text or len(page_text.strip()) < 50:
+                        logger.info(f"Página {page_num}: sin texto suficiente")
                         continue
 
                     chunks = chunk_text(page_text)
+                    logger.info(f"Página {page_num}: {len(chunks)} chunks extraídos")
 
                     for i, chunk in enumerate(chunks):
                         embedding = get_embedding(chunk)
                         if embedding is None:
+                            embedding_errors += 1
+                            logger.warning(
+                                f"Embedding falló para chunk {i} página {page_num}"
+                            )
                             continue
 
                         batch_vectors.append(
@@ -135,7 +145,7 @@ def add_pdf(pdf_path, source_name=None):
                         if len(batch_vectors) >= batch_size:
                             index.upsert(vectors=batch_vectors)
                             batch_vectors = []
-                            gc.collect()  # Force garbage collection
+                            gc.collect()
 
                 except Exception as e:
                     logger.warning(f"Error procesando página {page_num}: {e}")
@@ -147,8 +157,15 @@ def add_pdf(pdf_path, source_name=None):
 
             gc.collect()
 
+            logger.info(
+                f"Procesamiento completo: {chunk_count} chunks, {embedding_errors} errores embedding"
+            )
+
             if chunk_count == 0:
-                return 0, "No se pudo extraer texto procesable del PDF."
+                return (
+                    0,
+                    "No se pudieron generar embeddings. Verifique la API key de Gemini.",
+                )
 
             return (
                 chunk_count,
