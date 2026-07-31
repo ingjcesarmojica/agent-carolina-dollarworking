@@ -131,8 +131,11 @@ def gemini_response(user_message, context=""):
                         "\n\n## Base de conocimiento (usa esta información si es relevante):\n"
                         + "\n---\n".join(rag_parts)
                     )
-            except Exception:
-                pass
+                    app.logger.info(f"RAG: {len(docs)} docs encontrados")
+                else:
+                    app.logger.info("RAG: 0 docs encontrados")
+            except Exception as e:
+                app.logger.error(f"RAG error: {e}")
 
         prompt = f"""{system_prompt}{rag_context}
 
