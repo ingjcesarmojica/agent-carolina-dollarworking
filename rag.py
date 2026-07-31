@@ -1,27 +1,50 @@
 import os
-import chromadb
-from chromadb.utils import embedding_functions
 import pdfplumber
+from pinecone import Pinecone, ServerlessSpec
+from google.generativeai import GenerativeModel
+import google.generativeai as genai
 
 
-CHROMA_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
-PDF_DIR = os.path.join(os.path.dirname(__file__), "knowledge_pdfs")
+INDEX_NAME = "tusabogados-laboral"
+DIMENSION = 768
 
 
-def init_dirs():
-    os.makedirs(CHROMA_DIR, exist_ok=True)
-    os.makedirs(PDF_DIR, exist_ok=True)
+def get_pc():
+    api_key = os.environ.get("PINECONE_API_KEY", "")
+    if not api_key:
+        return None
+    return Pinecone(api_key=api_key)
 
 
-def get_collection():
-    init_dirs()
-    client = chromadb.PersistentClient(path=CHROMA_DIR)
-    ef = embedding_functions.DefaultEmbeddingFunction()
-    collection = client.get_or_create_collection(
-        name="tusabogados_laboral",
-        embedding_function=ef
-    )
-    return collection
+def get_index():
+    pc = get_pc()
+    if pc is None:
+        return None
+    existing = pc.list_indexes()
+    index_names = [idx.name for idx in existing.indexes]
+    if INDEX_NAME not in index_names:
+        pc.create_index(
+            name=INDEX_NAME,
+            dimension=DIMENSION,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1")
+        )
+    return pc.Index(INDEX_NAME)
+
+
+def get_embedding(text):
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if not api_key:
+        return None
+    try:
+        genai.configure(api_key=api_key)
+        result = genai.embed_content(
+            model="models/text-embedding-004",
+            content=text
+        )
+        return result["embedding"]
+    except Exception:
+        return None
 
 
 def extract_text_from_pdf(pdf_path):
@@ -34,14 +57,14 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 
-def chunk_text(text, chunk_size=1000, overlap=200):
+def chunk_text(text, chunk_size=800, overlap=150):
     chunks = []
     start = 0
     while start < len(text):
         end = start + chunk_size
         chunk = text[start:end]
         last_period = chunk.rfind(".")
-        if last_period > chunk_size * 0.5:
+        if last_period > chunk_size * 0.4:
             chunk = chunk[:last_period + 1]
             end = start + last_period + 1
         chunks.append(chunk.strip())
@@ -50,55 +73,126 @@ def chunk_text(text, chunk_size=1000, overlap=200):
 
 
 def add_pdf(pdf_path, source_name=None):
-    collection = get_collection()
+    index = get_index()
+    if index is None:
+        return 0, "Pinecone no configurado. Verifique PINECONE_API_KEY."
+
     if source_name is None:
         source_name = os.path.basename(pdf_path)
-    existing = collection.get(where={"source": source_name})
-    if existing and existing["ids"]:
-        collection.delete(ids=existing["ids"])
+
+    try:
+        index.delete(filter={"source": source_name})
+    except Exception:
+        pass
+
     text = extract_text_from_pdf(pdf_path)
     if not text.strip():
         return 0, "No se pudo extraer texto del PDF."
+
     chunks = chunk_text(text)
     if not chunks:
         return 0, "El PDF no contiene texto procesable."
-    ids = [f"{source_name}_{i}" for i in range(len(chunks))]
-    metadatas = [{"source": source_name, "chunk_index": i} for i in range(len(chunks))]
-    collection.add(documents=chunks, ids=ids, metadatas=metadatas)
-    return len(chunks), f"PDF '{source_name}' procesado: {len(chunks)} fragmentos indexados."
+
+    vectors = []
+    for i, chunk in enumerate(chunks):
+        embedding = get_embedding(chunk)
+        if embedding is None:
+            continue
+        vectors.append({
+            "id": f"{source_name}_{i}",
+            "values": embedding,
+            "metadata": {
+                "source": source_name,
+                "chunk_index": i,
+                "text": chunk[:1000]
+            }
+        })
+
+    if not vectors:
+        return 0, "No se pudieron generar embeddings para el PDF."
+
+    batch_size = 100
+    for i in range(0, len(vectors), batch_size):
+        batch = vectors[i:i + batch_size]
+        index.upsert(vectors=batch)
+
+    return len(vectors), f"PDF '{source_name}' procesado: {len(vectors)} fragmentos indexados."
 
 
 def search_knowledge(query, n_results=3):
-    collection = get_collection()
-    if collection.count() == 0:
+    index = get_index()
+    if index is None:
         return []
-    results = collection.query(query_texts=[query], n_results=n_results)
+
+    query_embedding = get_embedding(query)
+    if query_embedding is None:
+        return []
+
+    try:
+        stats = index.describe_index_stats()
+        if stats.total_vector_count == 0:
+            return []
+    except Exception:
+        return []
+
+    results = index.query(
+        vector=query_embedding,
+        top_k=n_results,
+        include_metadata=True
+    )
+
     docs = []
-    if results and results["documents"]:
-        for doc, meta in zip(results["documents"][0], results["metadatas"][0]):
-            docs.append({
-                "text": doc,
-                "source": meta.get("source", "desconocido")
-            })
+    for match in results.matches:
+        metadata = match.metadata
+        docs.append({
+            "text": metadata.get("text", ""),
+            "source": metadata.get("source", "desconocido")
+        })
     return docs
 
 
 def list_documents():
-    collection = get_collection()
-    if collection.count() == 0:
+    index = get_index()
+    if index is None:
         return []
-    all_data = collection.get()
+
+    try:
+        stats = index.describe_index_stats()
+        if stats.total_vector_count == 0:
+            return []
+    except Exception:
+        return []
+
     sources = set()
-    if all_data and all_data["metadatas"]:
-        for meta in all_data["metadatas"]:
-            sources.add(meta.get("source", "desconocido"))
+    try:
+        namespaces = stats.namespaces
+        for ns_name in namespaces:
+            ns_stats = index.describe_index_stats()
+            break
+    except Exception:
+        pass
+
+    try:
+        scan = index.query(
+            vector=[0] * DIMENSION,
+            top_k=10000,
+            include_metadata=True
+        )
+        for match in scan.matches:
+            sources.add(match.metadata.get("source", "desconocido"))
+    except Exception:
+        pass
+
     return list(sources)
 
 
 def delete_document(source_name):
-    collection = get_collection()
-    existing = collection.get(where={"source": source_name})
-    if existing and existing["ids"]:
-        collection.delete(ids=existing["ids"])
+    index = get_index()
+    if index is None:
+        return False, "Pinecone no configurado."
+
+    try:
+        index.delete(filter={"source": source_name})
         return True, f"Documento '{source_name}' eliminado."
-    return False, "Documento no encontrado."
+    except Exception as e:
+        return False, f"Error al eliminar: {str(e)}"
