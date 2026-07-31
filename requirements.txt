@@ -1,6 +1,7 @@
-Flask==2.3.3
-Flask-CORS==4.0.0
+Flask==3.1.1
+Flask-CORS==5.0.1
 edge-tts==7.2.8
 google-generativeai==0.8.0
-gunicorn==20.1.0
-python-dotenv==1.0.0
+gunicorn==23.0.0
+python-dotenv==1.1.0
+setuptools>=75.0.0
