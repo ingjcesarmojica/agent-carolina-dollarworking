@@ -415,13 +415,26 @@ He revisado su caso de {subtype}. Un abogado laboralista se comunicará con uste
 def upload_knowledge():
     if not RAG_AVAILABLE:
         return jsonify(
-            {"error": "Módulo RAG no disponible. Instale chromadb y pdfplumber."}
+            {"error": "Módulo RAG no disponible. Verifique dependencias."}
         ), 500
     if "file" not in request.files:
         return jsonify({"error": "No se envió ningún archivo."}), 400
     file = request.files["file"]
     if not file.filename.endswith(".pdf"):
         return jsonify({"error": "Solo se permiten archivos PDF."}), 400
+
+    # Check file size (max 5MB to prevent OOM on Render free tier)
+    file.seek(0, 2)  # Seek to end
+    file_size = file.tell()
+    file.seek(0)  # Seek back to start
+    max_size = 5 * 1024 * 1024  # 5MB
+    if file_size > max_size:
+        return jsonify(
+            {
+                "error": f"El archivo excede el límite de 5MB. Tamaño actual: {file_size // (1024 * 1024)}MB"
+            }
+        ), 400
+
     try:
         tmp_dir = tempfile.mkdtemp()
         tmp_path = os.path.join(tmp_dir, file.filename)

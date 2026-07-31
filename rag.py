@@ -1,11 +1,11 @@
 import os
+import gc
 import logging
-import pdfplumber
+from PyPDF2 import PdfReader
 from pinecone import Pinecone, ServerlessSpec
 import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
-
 
 INDEX_NAME = "tusabogados-laboral"
 DIMENSION = 768
@@ -62,24 +62,15 @@ def get_embedding(text):
         return None
 
 
-def extract_text_from_pdf(pdf_path):
-    text = ""
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-    return text
-
-
-def chunk_text(text, chunk_size=800, overlap=150):
+def chunk_text(text, chunk_size=600, overlap=100):
+    """Split text into smaller chunks for lower memory usage."""
     chunks = []
     start = 0
     while start < len(text):
         end = start + chunk_size
         chunk = text[start:end]
         last_period = chunk.rfind(".")
-        if last_period > chunk_size * 0.4:
+        if last_period > chunk_size * 0.3:
             chunk = chunk[: last_period + 1]
             end = start + last_period + 1
         chunks.append(chunk.strip())
@@ -88,6 +79,7 @@ def chunk_text(text, chunk_size=800, overlap=150):
 
 
 def add_pdf(pdf_path, source_name=None):
+    """Process PDF page-by-page to minimize memory usage."""
     index = get_index()
     if index is None:
         return 0, "Pinecone no configurado. Verifique PINECONE_API_KEY."
@@ -95,47 +87,77 @@ def add_pdf(pdf_path, source_name=None):
     if source_name is None:
         source_name = os.path.basename(pdf_path)
 
+    # Delete existing chunks for this source
     try:
         index.delete(filter={"source": source_name})
     except Exception:
         pass
 
-    text = extract_text_from_pdf(pdf_path)
-    if not text.strip():
-        return 0, "No se pudo extraer texto del PDF."
+    try:
+        with open(pdf_path, "rb") as f:
+            reader = PdfReader(f)
+            total_pages = len(reader.pages)
+            logger.info(f"PDF tiene {total_pages} páginas")
 
-    chunks = chunk_text(text)
-    if not chunks:
-        return 0, "El PDF no contiene texto procesable."
+            chunk_count = 0
+            batch_vectors = []
+            batch_size = 20  # Smaller batches for less memory
 
-    vectors = []
-    for i, chunk in enumerate(chunks):
-        embedding = get_embedding(chunk)
-        if embedding is None:
-            continue
-        vectors.append(
-            {
-                "id": f"{source_name}_{i}",
-                "values": embedding,
-                "metadata": {
-                    "source": source_name,
-                    "chunk_index": i,
-                    "text": chunk[:1000],
-                },
-            }
-        )
+            for page_num in range(total_pages):
+                try:
+                    page = reader.pages[page_num]
+                    page_text = page.extract_text()
+                    if not page_text or len(page_text.strip()) < 50:
+                        continue
 
-    if not vectors:
-        return 0, "No se pudieron generar embeddings para el PDF."
+                    chunks = chunk_text(page_text)
 
-    batch_size = 100
-    for i in range(0, len(vectors), batch_size):
-        batch = vectors[i : i + batch_size]
-        index.upsert(vectors=batch)
+                    for i, chunk in enumerate(chunks):
+                        embedding = get_embedding(chunk)
+                        if embedding is None:
+                            continue
 
-    return len(
-        vectors
-    ), f"PDF '{source_name}' procesado: {len(vectors)} fragmentos indexados."
+                        batch_vectors.append(
+                            {
+                                "id": f"{source_name}_p{page_num}_{i}",
+                                "values": embedding,
+                                "metadata": {
+                                    "source": source_name,
+                                    "page": page_num,
+                                    "chunk_index": chunk_count,
+                                    "text": chunk[:800],
+                                },
+                            }
+                        )
+                        chunk_count += 1
+
+                        # Flush batch to Pinecone
+                        if len(batch_vectors) >= batch_size:
+                            index.upsert(vectors=batch_vectors)
+                            batch_vectors = []
+                            gc.collect()  # Force garbage collection
+
+                except Exception as e:
+                    logger.warning(f"Error procesando página {page_num}: {e}")
+                    continue
+
+            # Upsert remaining vectors
+            if batch_vectors:
+                index.upsert(vectors=batch_vectors)
+
+            gc.collect()
+
+            if chunk_count == 0:
+                return 0, "No se pudo extraer texto procesable del PDF."
+
+            return (
+                chunk_count,
+                f"PDF '{source_name}' procesado: {chunk_count} fragmentos indexados.",
+            )
+
+    except Exception as e:
+        logger.error(f"Error procesando PDF: {e}", exc_info=True)
+        return 0, f"Error al leer el PDF: {str(e)}"
 
 
 def search_knowledge(query, n_results=3):
@@ -148,7 +170,7 @@ def search_knowledge(query, n_results=3):
         return []
 
     try:
-        stats = index.describe_index_stats()
+        stats = index.describe_index_stats().result()
         if stats.total_vector_count == 0:
             return []
     except Exception:
@@ -156,7 +178,7 @@ def search_knowledge(query, n_results=3):
 
     results = index.query(
         vector=query_embedding, top_k=n_results, include_metadata=True
-    )
+    ).result()
 
     docs = []
     for match in results.matches:
@@ -176,7 +198,7 @@ def list_documents():
         return []
 
     try:
-        stats = index.describe_index_stats()
+        stats = index.describe_index_stats().result()
         if stats.total_vector_count == 0:
             return []
     except Exception:
@@ -184,15 +206,9 @@ def list_documents():
 
     sources = set()
     try:
-        namespaces = stats.namespaces
-        for ns_name in namespaces:
-            ns_stats = index.describe_index_stats()
-            break
-    except Exception:
-        pass
-
-    try:
-        scan = index.query(vector=[0] * DIMENSION, top_k=10000, include_metadata=True)
+        scan = index.query(
+            vector=[0.0] * DIMENSION, top_k=10000, include_metadata=True
+        ).result()
         for match in scan.matches:
             sources.add(match.metadata.get("source", "desconocido"))
     except Exception:
