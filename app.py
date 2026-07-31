@@ -496,6 +496,30 @@ def health_check():
     )
 
 
+@app.route("/api/test-embedding", methods=["GET"])
+def test_embedding():
+    """Test endpoint to check if Gemini embeddings work."""
+    try:
+        import google.generativeai as genai
+
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            return jsonify({"error": "GEMINI_API_KEY no configurada"}), 500
+        genai.configure(api_key=api_key)
+        result = genai.embed_content(
+            model="models/text-embedding-004", content="Test de embedding"
+        )
+        return jsonify(
+            {
+                "status": "ok",
+                "dimension": len(result["embedding"]),
+                "first_5_values": result["embedding"][:5],
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/voices", methods=["GET"])
 def list_voices():
     voices = [
