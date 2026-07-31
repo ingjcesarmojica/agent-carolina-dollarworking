@@ -55,6 +55,18 @@ def get_embedding(text):
         return None
     try:
         genai.configure(api_key=api_key)
+        # Use gemini-embedding-001 (text-only model)
+        result = genai.embed_content(
+            model="models/gemini-embedding-001",
+            content=text[:2000],
+            output_dimensionality=768,
+        )
+        return result["embedding"]
+    except Exception as e:
+        logger.error(f"Error generando embedding: {e}", exc_info=True)
+        return None
+    try:
+        genai.configure(api_key=api_key)
         # Truncate text to 2000 chars to avoid API limits
         result = genai.embed_content(
             model="models/text-embedding-004", content=text[:2000]

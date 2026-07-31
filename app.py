@@ -507,7 +507,9 @@ def test_embedding():
             return jsonify({"error": "GEMINI_API_KEY no configurada"}), 500
         genai.configure(api_key=api_key)
         result = genai.embed_content(
-            model="models/text-embedding-004", content="Test de embedding"
+            model="models/gemini-embedding-001",
+            content="Test de embedding",
+            output_dimensionality=768,
         )
         return jsonify(
             {
