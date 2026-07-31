@@ -597,7 +597,7 @@ def pinecone_status():
             )
 
         idx = pc.Index(INDEX_NAME)
-        stats = idx.describe_index_stats().result()
+        stats = idx.describe_index_stats()
 
         return jsonify(
             {

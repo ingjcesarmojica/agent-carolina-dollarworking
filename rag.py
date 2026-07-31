@@ -55,7 +55,6 @@ def get_embedding(text):
         return None
     try:
         genai.configure(api_key=api_key)
-        # Use gemini-embedding-001 (text-only model)
         result = genai.embed_content(
             model="models/gemini-embedding-001",
             content=text[:2000],
@@ -65,20 +64,9 @@ def get_embedding(text):
     except Exception as e:
         logger.error(f"Error generando embedding: {e}", exc_info=True)
         return None
-    try:
-        genai.configure(api_key=api_key)
-        # Truncate text to 2000 chars to avoid API limits
-        result = genai.embed_content(
-            model="models/text-embedding-004", content=text[:2000]
-        )
-        return result["embedding"]
-    except Exception as e:
-        logger.error(f"Error generando embedding: {e}", exc_info=True)
-        return None
 
 
 def chunk_text(text, chunk_size=1500, overlap=200):
-    """Split text into chunks - larger chunks = fewer API calls = faster processing."""
     chunks = []
     start = 0
     while start < len(text):
@@ -94,7 +82,6 @@ def chunk_text(text, chunk_size=1500, overlap=200):
 
 
 def add_pdf(pdf_path, source_name=None):
-    """Process PDF page-by-page to minimize memory usage."""
     index = get_index()
     if index is None:
         return 0, "Pinecone no configurado. Verifique PINECONE_API_KEY."
@@ -102,7 +89,6 @@ def add_pdf(pdf_path, source_name=None):
     if source_name is None:
         source_name = os.path.basename(pdf_path)
 
-    # Delete existing chunks for this source
     try:
         index.delete(filter={"source": source_name})
     except Exception:
@@ -124,19 +110,15 @@ def add_pdf(pdf_path, source_name=None):
                     page = reader.pages[page_num]
                     page_text = page.extract_text()
                     if not page_text or len(page_text.strip()) < 50:
-                        logger.info(f"Página {page_num}: sin texto suficiente")
                         continue
 
                     chunks = chunk_text(page_text)
-                    logger.info(f"Página {page_num}: {len(chunks)} chunks extraídos")
+                    logger.info(f"Página {page_num}: {len(chunks)} chunks")
 
                     for i, chunk in enumerate(chunks):
                         embedding = get_embedding(chunk)
                         if embedding is None:
                             embedding_errors += 1
-                            logger.warning(
-                                f"Embedding falló para chunk {i} página {page_num}"
-                            )
                             continue
 
                         batch_vectors.append(
@@ -153,35 +135,28 @@ def add_pdf(pdf_path, source_name=None):
                         )
                         chunk_count += 1
 
-                        # Flush batch to Pinecone
                         if len(batch_vectors) >= batch_size:
                             index.upsert(vectors=batch_vectors)
                             batch_vectors = []
                             gc.collect()
 
                 except Exception as e:
-                    logger.warning(f"Error procesando página {page_num}: {e}")
+                    logger.warning(f"Error página {page_num}: {e}")
                     continue
 
-            # Upsert remaining vectors
             if batch_vectors:
                 index.upsert(vectors=batch_vectors)
 
             gc.collect()
 
-            logger.info(
-                f"Procesamiento completo: {chunk_count} chunks, {embedding_errors} errores embedding"
-            )
+            logger.info(f"Completado: {chunk_count} chunks, {embedding_errors} errores")
 
             if chunk_count == 0:
-                return (
-                    0,
-                    "No se pudieron generar embeddings. Verifique la API key de Gemini.",
-                )
+                return 0, "No se pudieron generar embeddings. Verifique la API key."
 
             return (
                 chunk_count,
-                f"PDF '{source_name}' procesado: {chunk_count} fragmentos indexados.",
+                f"PDF '{source_name}': {chunk_count} fragmentos indexados.",
             )
 
     except Exception as e:
@@ -199,7 +174,7 @@ def search_knowledge(query, n_results=3):
         return []
 
     try:
-        stats = index.describe_index_stats().result()
+        stats = index.describe_index_stats()
         if stats.total_vector_count == 0:
             return []
     except Exception:
@@ -207,7 +182,7 @@ def search_knowledge(query, n_results=3):
 
     results = index.query(
         vector=query_embedding, top_k=n_results, include_metadata=True
-    ).result()
+    )
 
     docs = []
     for match in results.matches:
@@ -227,7 +202,7 @@ def list_documents():
         return []
 
     try:
-        stats = index.describe_index_stats().result()
+        stats = index.describe_index_stats()
         if stats.total_vector_count == 0:
             return []
     except Exception:
@@ -235,9 +210,7 @@ def list_documents():
 
     sources = set()
     try:
-        scan = index.query(
-            vector=[0.0] * DIMENSION, top_k=10000, include_metadata=True
-        ).result()
+        scan = index.query(vector=[0.0] * DIMENSION, top_k=10000, include_metadata=True)
         for match in scan.matches:
             sources.add(match.metadata.get("source", "desconocido"))
     except Exception:
