@@ -103,14 +103,14 @@ SYSTEM_PROMPT = """Eres Carolina, la asesora virtual de Dollar Working.
 - Expresiones naturales: "¡Hola!", "Perfecto", "¡Excelente decisión!", "Tranquilo/a, para eso estoy", "¡Genial!"
 
 ## Reglas
-- Responde en máximo 2-3 oraciones.
+- Responde en maximo 2-3 oraciones.
 - Sigues un flujo conversacional estructurado con opciones.
 - SIEMPRE ofreces opciones claras al usuario.
 - Cuando el usuario elige un plan, lo diriges al cierre (WhatsApp).
-- Manejas objeciones con empatía y argumentos de pago contra entrega.
-- Usas emojis de forma natural pero moderada.
-- Evitas tecnicismos; le hablas a emprendedores sin conocimientos técnicos.
-- NO modificas montos, nombres de planes ni número de contacto.
+- Manejas objeciones con empatia y argumentos de pago contra entrega.
+- NO uses emojis en tus respuestas, solo texto plano para que el TTS funcione bien.
+- Evitas tecnicismos; le hablas a emprendedores sin conocimientos tecnicos.
+- NO modificas montos, nombres de planes ni numero de contacto.
 
 ## Planes
 - Plan Lanzate YA: 1 USD / $3.205 COP - Pagina web
@@ -153,7 +153,7 @@ Usuario: {user_message}"""
 
 def get_welcome_message():
     return {
-        "response": "¡Hola! 👋 Soy **Carolina**, tu asesora virtual en Dollar Working.\n\nAyudamos a emprendedores como tú a montar su negocio digital desde solo **1 dólar**.\n\n¿Con qué te gustaría empezar hoy?",
+        "response": "Hola! Soy Carolina, tu asesora virtual en Dollar Working.\n\nAyudamos a emprendedores como tu a montar su negocio digital desde solo 1 dolar.\n\nCon que te gustaria empezar hoy?",
         "options": [
             {"label": "Página Web", "value": "pagina_web"},
             {"label": "Tienda Online", "value": "tienda_online"},
@@ -170,7 +170,7 @@ def get_welcome_message():
 
 def get_plan_comparator():
     return {
-        "response": "Tenemos 3 planes, todos con la promesa de **pagar solo cuando recibas tus productos y estés conforme** 💪:\n\n💵 **$1 USD – Plan Lánzate YA:** tu página web.\n💵 **$3 USD – Plan A Vender Se Dijo:** página web + tienda online.\n💵 **$5 USD – Plan Que Negociazo:** página web + tienda + chatbot + agente de IA + IA-Records.",
+        "response": "Tenemos 3 planes, todos con la promesa de pagar solo cuando recibas tus productos y estes conforme:\n\n1 dolar, Plan Lanzate YA: tu pagina web.\n3 dolares, Plan A Vender Se Dijo: pagina web + tienda online.\n5 dolares, Plan Que Negociazo: pagina web + tienda + chatbot + agente de IA + IA-Records.",
         "options": [
             {"label": "$1 USD – Lánzate YA", "value": "plan_1"},
             {"label": "$3 USD – A Vender Se Dijo", "value": "plan_3"},
@@ -229,7 +229,7 @@ def get_faq_answer(option):
 
 def get_close_message(plan_name):
     return {
-        "response": f"¡Genial! Elegiste el **{plan_name}** 🎉\n\nPara iniciar tu negocio, solo necesito tu nombre y te conecto directo con nuestro equipo por WhatsApp para coordinar los detalles.\n\nRecuerda: **no pagas nada hasta recibir tu producto y estar conforme.** ✅",
+        "response": f"Genial! Elegiste el {plan_name}.\n\nPara iniciar tu negocio, solo necesito tu nombre y te conecto directo con nuestro equipo por WhatsApp para coordinar los detalles.\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
         "options": [
             {
                 "label": "Hablar con un asesor por WhatsApp",
@@ -287,7 +287,7 @@ def chat():
         if is_farewell:
             return jsonify(
                 {
-                    "response": "¡Fue un gusto ayudarte! Si tienes otra pregunta, aquí estaré. Y si ya quieres dar el paso, escríbenos por WhatsApp y arrancamos tu negocio digital hoy mismo 🚀",
+                    "response": "Fue un gusto ayudarte! Si tienes otra pregunta, aqui estare. Y si ya quieres dar el paso, escribenos por WhatsApp y arrancamos tu negocio digital hoy mismo.",
                     "options": [],
                     "end_call": True,
                 }
@@ -311,7 +311,7 @@ def chat():
         if message_lower == "pagina_web":
             return jsonify(
                 {
-                    "response": "Perfecto 🙌 Con el **Plan Lánzate YA (1 USD / $3.205 COP)** te entregamos tu página web con diseño responsive, hosting por 1 año y certificado SSL.",
+                    "response": "Perfecto. Con el Plan Lanzate YA (1 USD / 3.205 COP) te entregamos tu pagina web con diseno responsive, hosting por 1 ano y certificado SSL.",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_1"},
                         {"label": "Ver otros planes", "value": "comparar"},
@@ -324,7 +324,7 @@ def chat():
         if message_lower == "tienda_online":
             return jsonify(
                 {
-                    "response": "¡Excelente decisión! 🛒 Con el **Plan A Vender Se Dijo (3 USD / $9.521 COP)** obtienes tu página web + tienda online con pasarela de pagos.",
+                    "response": "Excelente decision. Con el Plan A Vender Se Dijo (3 USD / 9.521 COP) obtienes tu pagina web + tienda online con pasarela de pagos.",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_3"},
                         {"label": "Ver otros planes", "value": "comparar"},
@@ -337,7 +337,7 @@ def chat():
         if message_lower == "chatbot":
             return jsonify(
                 {
-                    "response": "Un chatbot con IA te atiende 24/7 y se personaliza a tu negocio 🤖. Está incluido en el **Plan Que Negociazo (5 USD / $15.869 COP)**, junto con tu web, tienda, agente de IA e IA-Records.",
+                    "response": "Un chatbot con IA te atiende 24/7 y se personaliza a tu negocio. Esta incluido en el Plan Que Negociazo (5 USD / 15.869 COP), junto con tu web, tienda, agente de IA e IA-Records.",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_5"},
                         {"label": "Qué es IA-Records", "value": "ia_records"},
@@ -350,7 +350,7 @@ def chat():
         if message_lower == "agente_ia":
             return jsonify(
                 {
-                    "response": "Los agentes de IA automatizan tareas, procesan datos y aprenden de tu negocio con machine learning 🚀. Vienen incluidos en el **Plan Que Negociazo**.",
+                    "response": "Los agentes de IA automatizan tareas, procesan datos y aprenden de tu negocio con machine learning. Vienen incluidos en el Plan Que Negociazo.",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_5"},
                         {"label": "Ver todos los planes", "value": "comparar"},
@@ -363,7 +363,7 @@ def chat():
         if message_lower == "no_se" or message_lower == "no_se_que_necesito":
             return jsonify(
                 {
-                    "response": "Tranquilo/a, para eso estoy 😊 Cuéntame:",
+                    "response": "Tranquilo, para eso estoy. Cuentame:",
                     "options": [
                         {"label": "Mi negocio ya existe", "value": "comparar"},
                         {"label": "Estoy empezando desde cero", "value": "comparar"},
@@ -403,7 +403,7 @@ def chat():
         if message_lower in ["whatsapp", "hablar_con_asesor", "asesor"]:
             return jsonify(
                 {
-                    "response": f"¡Perfecto! Te redirijo a nuestro equipo por WhatsApp 👇\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
+                    "response": f"Perfecto! Te redirijo a nuestro equipo por WhatsApp.\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
                     "options": [
                         {
                             "label": "Abrir WhatsApp",
@@ -422,7 +422,7 @@ def chat():
         if message_lower in ["ver_testimonios", "testimonios"]:
             return jsonify(
                 {
-                    "response": "¡Claro! Tenemos más de 250 proyectos entregados y un 98% de clientes satisfechos 💪. Muchos de ellos empezaron con la misma duda que tú.\n\n¿Qué te gustaría hacer?",
+                    "response": "Claro! Tenemos mas de 250 proyectos entregados y un 98% de clientes satisfechos. Muchos de ellos empezaron con la misma duda que tu.\n\nQue te gustaria hacer?",
                     "options": [
                         {"label": "Quiero empezar", "value": "comparar"},
                         {"label": "Volver al menú", "value": "menu"},
@@ -438,7 +438,7 @@ def chat():
         ]:
             return jsonify(
                 {
-                    "response": "¡Claro! Te enviamos toda la información por WhatsApp para que la revises tranquilo/a 👇",
+                    "response": "Claro! Te enviamos toda la informacion por WhatsApp para que la revises tranquilo.",
                     "options": [
                         {
                             "label": "Enviar info por WhatsApp",
@@ -470,7 +470,7 @@ def chat():
         ):
             return jsonify(
                 {
-                    "response": "Es válida tu duda 🙌 Trabajamos bajo pago contra entrega: tú validas el producto y luego pagas. Tenemos más de 250 proyectos entregados y 98% de clientes satisfechos. La idea de Dollar Working es justamente esa: que emprender esté al alcance de todos, sin importar tu presupuesto.",
+                    "response": "Es valida tu duda. Trabajamos bajo pago contra entrega: tu validas el producto y luego pagas. Tenemos mas de 250 proyectos entregados y 98% de clientes satisfechos. La idea de Dollar Working es justamente esa: que emprender este al alcance de todos, sin importar tu presupuesto.",
                     "options": [
                         {"label": "Entendido, quiero continuar", "value": "continuar"},
                         {
@@ -517,7 +517,7 @@ def chat():
         ):
             return jsonify(
                 {
-                    "response": "Claro, tómate tu tiempo 😊 Solo recuerda que no hay riesgo: pagas únicamente cuando recibas tu producto y estés conforme. Cuando quieras retomar, aquí estaré.",
+                    "response": "Claro, tomate tu tiempo. Solo recuerda que no hay riesgo: pagas unicamente cuando recibas tu producto y estes conforme. Cuando quieras retomar, aqui estare.",
                     "options": [
                         {"label": "Recibir info por WhatsApp", "value": "recibir_info"},
                         {"label": "Volver al menú", "value": "menu"},

@@ -52,21 +52,6 @@
             letter-spacing: 1px;
         }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            margin-bottom: 15px;
-            padding-left: 15px;
-        }
-
-        .logo-img {
-            width: 110px;
-            height: 110px;
-            border-radius: 14px;
-            object-fit: contain;
-        }
-
         .profile-section {
             text-align: center;
             position: relative;
@@ -155,6 +140,39 @@
             font-weight: 500;
         }
 
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 20px;
+            flex-shrink: 0;
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid #306eff;
+            background: transparent;
+            color: #306eff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mode-btn.active {
+            background: #306eff;
+            color: #ffffff;
+            border-color: #306eff;
+        }
+
+        .mode-btn:hover {
+            background: #ffc704;
+            color: #14173f;
+            border-color: #ffc704;
+        }
+
         .content-area {
             flex: 1;
             display: flex;
@@ -163,12 +181,75 @@
             min-height: 0;
         }
 
-        .chat-view {
+        .call-view, .chat-view {
             flex: 1;
-            display: flex;
+            display: none;
             flex-direction: column;
             min-height: 0;
             overflow: hidden;
+        }
+
+        .call-view.active, .chat-view.active {
+            display: flex;
+        }
+
+        .call-view {
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .action-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .whatsapp-button {
+            background: #306eff;
+            color: #ffffff;
+        }
+
+        .whatsapp-button:hover {
+            background: #ffc704;
+            color: #14173f;
+            transform: scale(1.05);
+        }
+
+        .end-call-button {
+            background: #ef4444;
+            color: #ffffff;
+            display: none;
+        }
+
+        .end-call-button:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .button-label {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .call-view.calling .whatsapp-button { display: none; }
+        .call-view.calling .end-call-button { display: flex; }
+        .call-view:not(.calling) .end-call-button { display: none; }
+
+        .chat-view {
             padding: 0;
         }
 
@@ -246,7 +327,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            padding: 4px 0 4px 0;
+            padding: 4px 0;
             align-self: flex-start;
             max-width: 95%;
         }
@@ -294,7 +375,6 @@
         .option-btn.menu-btn:hover {
             background: #306eff;
             color: #ffffff;
-            border-color: #306eff;
         }
 
         .option-btn.whatsapp-btn {
@@ -304,7 +384,6 @@
 
         .option-btn.whatsapp-btn:hover {
             background: #128c7e;
-            color: #ffffff;
             transform: translateX(4px);
         }
 
@@ -436,7 +515,7 @@
         <div class="header">
             <div class="header-title">Dollar Working</div>
             <div class="profile-section">
-                <div class="online-badge">En línea</div>
+                <div class="online-badge">En linea</div>
                 <div class="avatar-container">
                     <div class="avatar"></div>
                     <div class="pulse-rings" id="pulseRings">
@@ -445,10 +524,14 @@
                         <div class="pulse-ring"></div>
                     </div>
                 </div>
-
                 <div class="profile-name">Carolina</div>
                 <div class="profile-title">Asesora Virtual</div>
             </div>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="chatModeBtn" onclick="switchMode('chat')">Chat</button>
+            <button class="mode-btn" id="callModeBtn" onclick="switchMode('call')">Llamada</button>
         </div>
 
         <div class="content-area">
@@ -463,18 +546,102 @@
                     </button>
                 </div>
             </div>
+
+            <div class="call-view" id="callView">
+                <button class="action-button whatsapp-button" id="startCallBtn" onclick="startCall()">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                    </svg>
+                </button>
+
+                <button class="action-button end-call-button" id="endCallBtn" onclick="endCall()">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                        <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                    </svg>
+                </button>
+
+                <div class="button-label" id="buttonLabel">Llamar</div>
+            </div>
         </div>
 
         <div class="status-indicator" id="statusIndicator">Listo para ayudarte</div>
     </div>
 
     <script>
+        let currentMode = 'chat';
+        let isCalling = false;
+        let isListening = false;
         let isSpeaking = false;
+        let recognition = null;
         let currentAudio = null;
         let chatHistory = [];
+        let ringtoneInterval = null;
+        let ringtoneCtx = null;
 
         const CHAT_API_URL = '/api/chat';
         const SPEAK_API_URL = '/api/speak';
+
+        function switchMode(mode) {
+            currentMode = mode;
+
+            document.getElementById('chatModeBtn').classList.toggle('active', mode === 'chat');
+            document.getElementById('callModeBtn').classList.toggle('active', mode === 'call');
+
+            document.getElementById('chatView').classList.toggle('active', mode === 'chat');
+            document.getElementById('callView').classList.toggle('active', mode === 'call');
+
+            if (mode === 'call') {
+                document.getElementById('statusIndicator').textContent = 'Listo para hablar';
+            } else {
+                endCall();
+                stopRingtone();
+                document.getElementById('statusIndicator').textContent = 'Modo chat activo';
+            }
+        }
+
+        function playRingtone() {
+            stopRingtone();
+            ringtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            function playTone() {
+                if (!ringtoneCtx || !isCalling) return;
+
+                const osc1 = ringtoneCtx.createOscillator();
+                const osc2 = ringtoneCtx.createOscillator();
+                const gainNode = ringtoneCtx.createGain();
+
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+                osc1.frequency.value = 420;
+                osc2.frequency.value = 480;
+
+                gainNode.gain.setValueAtTime(0.15, ringtoneCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ringtoneCtx.currentTime + 0.4);
+
+                osc1.connect(gainNode);
+                osc2.connect(gainNode);
+                gainNode.connect(ringtoneCtx.destination);
+
+                osc1.start(ringtoneCtx.currentTime);
+                osc2.start(ringtoneCtx.currentTime);
+                osc1.stop(ringtoneCtx.currentTime + 0.4);
+                osc2.stop(ringtoneCtx.currentTime + 0.4);
+            }
+
+            playTone();
+            ringtoneInterval = setInterval(playTone, 1200);
+        }
+
+        function stopRingtone() {
+            if (ringtoneInterval) {
+                clearInterval(ringtoneInterval);
+                ringtoneInterval = null;
+            }
+            if (ringtoneCtx) {
+                ringtoneCtx.close().catch(() => {});
+                ringtoneCtx = null;
+            }
+        }
 
         function handleKeyPress(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -511,11 +678,15 @@
                 }
 
                 addMessage(data.response, 'bot', data.options);
+
+                if (data.end_call) {
+                    switchMode('chat');
+                }
             })
             .catch(error => {
                 hideTyping();
                 document.getElementById('sendBtn').disabled = false;
-                addMessage('Error de conexión. Verifica tu internet.', 'bot');
+                addMessage('Error de conexion. Verifica tu internet.', 'bot');
             });
         }
 
@@ -531,7 +702,7 @@
             if (sender === 'bot') {
                 const speakBtn = document.createElement('button');
                 speakBtn.className = 'speak-btn';
-                speakBtn.innerHTML = '🔊';
+                speakBtn.innerHTML = '\uD83D\uDD0A';
                 speakBtn.onclick = function() { speakMessage(text, this); };
                 msg.style.position = 'relative';
                 msg.appendChild(speakBtn);
@@ -598,7 +769,7 @@
             })
             .catch(error => {
                 hideTyping();
-                addMessage('Error de conexión. Verifica tu internet.', 'bot');
+                addMessage('Error de conexion. Verifica tu internet.', 'bot');
             });
         }
 
@@ -662,6 +833,170 @@
             });
         }
 
+        function startCall() {
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                showError("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
+                return;
+            }
+
+            isCalling = true;
+            const callView = document.getElementById('callView');
+            callView.classList.add('calling');
+            document.getElementById('buttonLabel').textContent = 'Finalizar';
+            document.getElementById('statusIndicator').textContent = 'Conectando...';
+
+            playRingtone();
+            sendCallMessage('hola');
+        }
+
+        function endCall() {
+            isCalling = false;
+            isListening = false;
+            isSpeaking = false;
+            stopRingtone();
+
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+                recognition = null;
+            }
+
+            if (currentAudio) {
+                try { currentAudio.pause(); currentAudio = null; } catch(e) {}
+            }
+
+            if ('speechSynthesis' in window) speechSynthesis.cancel();
+
+            const callView = document.getElementById('callView');
+            callView.classList.remove('calling');
+            document.getElementById('buttonLabel').textContent = 'Llamar';
+            document.getElementById('pulseRings').classList.remove('active');
+
+            if (currentMode === 'call') {
+                document.getElementById('statusIndicator').textContent = 'Llamada finalizada';
+                setTimeout(() => {
+                    if (!isCalling && currentMode === 'call') {
+                        document.getElementById('statusIndicator').textContent = 'Listo para hablar';
+                    }
+                }, 3000);
+            }
+        }
+
+        function sendCallMessage(message) {
+            document.getElementById('statusIndicator').innerHTML = "Procesando<span class='typing-dots'><span></span><span></span><span></span></span>";
+
+            fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showError("Error procesando tu mensaje.");
+                    startListening();
+                    return;
+                }
+
+                speakCallText(data.response, data.end_call);
+            })
+            .catch(error => {
+                showError("Error de conexion.");
+                startListening();
+            });
+        }
+
+        function speakCallText(text, endCallAfter) {
+            isSpeaking = true;
+            stopRingtone();
+            document.getElementById('statusIndicator').textContent = "Hablando...";
+            document.getElementById('pulseRings').classList.add('active');
+
+            fetch(SPEAK_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.audioUrl) {
+                    currentAudio = new Audio(data.audioUrl);
+                    currentAudio.onended = function() {
+                        isSpeaking = false;
+                        currentAudio = null;
+                        document.getElementById('pulseRings').classList.remove('active');
+                        if (endCallAfter) {
+                            endCall();
+                        } else {
+                            startListening();
+                        }
+                    };
+                    currentAudio.onerror = function() {
+                        isSpeaking = false;
+                        currentAudio = null;
+                        document.getElementById('pulseRings').classList.remove('active');
+                        if (endCallAfter) endCall();
+                        else startListening();
+                    };
+                    currentAudio.play();
+                } else {
+                    isSpeaking = false;
+                    document.getElementById('pulseRings').classList.remove('active');
+                    if (endCallAfter) endCall();
+                    else startListening();
+                }
+            })
+            .catch(() => {
+                isSpeaking = false;
+                document.getElementById('pulseRings').classList.remove('active');
+                if (endCallAfter) endCall();
+                else startListening();
+            });
+        }
+
+        function startListening() {
+            if (!isCalling) return;
+
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'es-CO';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isListening = true;
+                document.getElementById('statusIndicator').textContent = "Escuchando...";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                isListening = false;
+                recognition.stop();
+                sendCallMessage(transcript);
+            };
+
+            recognition.onerror = function(event) {
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    console.error('Error reconocimiento:', event.error);
+                }
+                if (isCalling) {
+                    setTimeout(() => {
+                        if (isCalling && !isSpeaking) startListening();
+                    }, 1000);
+                }
+            };
+
+            recognition.onend = function() {
+                if (isCalling && !isSpeaking && !isListening) {
+                    setTimeout(() => startListening(), 500);
+                }
+            };
+
+            try {
+                recognition.start();
+            } catch(e) {
+                console.error('Error microfono:', e);
+            }
+        }
+
         function showError(message) {
             const el = document.getElementById('errorMessage');
             el.textContent = message;
@@ -687,12 +1022,12 @@
             })
             .catch(() => {
                 hideTyping();
-                addMessage('¡Hola! 👋 Soy Carolina, tu asesora virtual en Dollar Working. ¿En qué puedo ayudarte hoy?', 'bot', [
-                    {"label": "Página Web", "value": "pagina_web"},
+                addMessage('Hola, Soy Carolina, tu asesora virtual en Dollar Working. En que puedo ayudarte hoy?', 'bot', [
+                    {"label": "Pagina Web", "value": "pagina_web"},
                     {"label": "Tienda Online", "value": "tienda_online"},
                     {"label": "Chatbot", "value": "chatbot"},
                     {"label": "Agente de IA", "value": "agente_ia"},
-                    {"label": "Me gustaría recibir información de cómo puedo iniciar mi negocio con Dollar Working", "value": "no_se"}
+                    {"label": "Me gustaria recibir informacion de como puedo iniciar mi negocio con Dollar Working", "value": "no_se"}
                 ]);
             });
         });
