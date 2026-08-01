@@ -285,7 +285,7 @@
             padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
             min-height: 0;
         }
 
@@ -549,10 +549,10 @@
         }
 
         .lead-form {
-            padding: 15px;
+            padding: 8px 15px 15px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .lead-form input {
@@ -1303,7 +1303,7 @@
             })
             .catch(() => {
                 hideTyping();
-                addMessage('Hola, soy Carolina, tu asesora de Dollar Working, un gusto saludarte.', 'bot');
+                addMessage('Hola, soy Carolina, tu asesora de Dollar Working, un gusto saludarte, por favor para poder colaborarte con la información, diligencia los siguientes campos:', 'bot');
                 showLeadForm();
             });
         });

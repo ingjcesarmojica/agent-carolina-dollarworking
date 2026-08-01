@@ -165,7 +165,7 @@ def is_valid_phone(text):
 
 def get_welcome_message():
     return {
-        "response": "Hola, soy Carolina, tu asesora de Dollar Working, un gusto saludarte. Cual es tu nombre?",
+        "response": "Hola, soy Carolina, tu asesora de Dollar Working, un gusto saludarte, por favor para poder colaborarte con la información, diligencia los siguientes campos:",
         "flow": "ask_name",
         "options": [],
         "end_call": False,
