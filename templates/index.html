@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Carolina - Asesora Virtual Dollar Working</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -68,6 +68,18 @@
             height: 170px;
             object-fit: contain;
             object-position: bottom;
+        }
+
+        .header-slogan {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            font-family: 'Baloo 2', cursive;
+            font-weight: 800;
+            font-size: 18px;
+            color: #ffffff;
+            z-index: 2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .header-title {
@@ -646,6 +658,7 @@
         <div class="header">
             <img class="header-logo" src="/static/images/logo.png" alt="Dollar Working">
             <img class="header-model" src="/static/images/modelofooter.png" alt="Carolina">
+            <div class="header-slogan">Te Ayudamos con</div>
         </div>
 
         <div class="mode-toggle">
