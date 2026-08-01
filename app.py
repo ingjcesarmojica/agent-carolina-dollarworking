@@ -567,6 +567,9 @@ def chat():
                 return jsonify(get_faq_answer(message_lower))
             return jsonify(get_faq_menu())
 
+        if message_lower == "lead_form_submitted" and flow == "ask_name":
+            return jsonify(get_discovery_web(name))
+
         if flow == "ask_name":
             cleaned_name = message.strip().title()
             if len(cleaned_name) < 2:

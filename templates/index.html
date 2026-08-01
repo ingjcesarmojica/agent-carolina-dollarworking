@@ -548,6 +548,69 @@
             border-color: #ffc704;
         }
 
+        .lead-form {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .lead-form input {
+            padding: 12px 15px;
+            border: 2px solid #ffffff;
+            border-radius: 12px;
+            background: #ffc704;
+            color: #000000;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .lead-form input::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .lead-form input:focus {
+            border-color: #306eff;
+        }
+
+        .lead-form input.error {
+            border-color: #ff4444;
+            background: #ffcccc;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .lead-form button {
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: #306eff;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lead-form button:hover {
+            background: #2f6eff;
+            transform: scale(1.02);
+        }
+
+        .lead-form button:disabled {
+            background: rgba(48, 110, 255, 0.5);
+            cursor: not-allowed;
+            transform: none;
+        }
+
         @media (max-width: 420px) {
             .app-container {
                 width: 100%;
@@ -592,7 +655,13 @@
         <div class="content-area">
             <div class="chat-view active" id="chatView">
                 <div class="chat-messages" id="chatMessages"></div>
-                <div class="chat-input-area">
+                <div id="leadFormContainer" class="lead-form" style="display:none;">
+                    <input type="text" id="leadName" placeholder="Nombre completo" autocomplete="name">
+                    <input type="tel" id="leadPhone" placeholder="Celular (ej: +57 300 123 4567)" autocomplete="tel">
+                    <input type="email" id="leadEmail" placeholder="Correo electronico" autocomplete="email">
+                    <button id="leadSubmitBtn" onclick="submitLeadForm()">Enviar</button>
+                </div>
+                <div class="chat-input-area" id="chatInputArea">
                     <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)">
                     <div class="send-btn-wrapper">
                         <button class="send-btn" id="sendBtn" onclick="sendChatText()">
@@ -654,6 +723,88 @@
                 currentAudio = null;
                 isSpeaking = false;
             }
+        }
+
+        function submitLeadForm() {
+            const nameInput = document.getElementById('leadName');
+            const phoneInput = document.getElementById('leadPhone');
+            const emailInput = document.getElementById('leadEmail');
+
+            nameInput.classList.remove('error');
+            phoneInput.classList.remove('error');
+            emailInput.classList.remove('error');
+
+            let hasError = false;
+
+            if (!nameInput.value.trim()) {
+                nameInput.classList.add('error');
+                hasError = true;
+            }
+            if (!phoneInput.value.trim()) {
+                phoneInput.classList.add('error');
+                hasError = true;
+            }
+            if (!emailInput.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+                emailInput.classList.add('error');
+                hasError = true;
+            }
+
+            if (hasError) {
+                showError("Por favor completa todos los campos correctamente.");
+                return;
+            }
+
+            const name = nameInput.value.trim();
+            const phone = phoneInput.value.trim();
+            const email = emailInput.value.trim();
+
+            userData.name = name;
+            userData.phone = phone;
+            userData.email = email;
+
+            document.getElementById('leadFormContainer').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'flex';
+
+            addMessage("Nombre: " + name + "\nCelular: " + phone + "\nCorreo: " + email, 'user');
+            showTyping();
+
+            fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: 'lead_form_submitted',
+                    flow: 'ask_name',
+                    user_data: userData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideTyping();
+                if (data.flow) currentFlow = data.flow;
+                showTyping();
+                setTimeout(() => {
+                    hideTyping();
+                    addMessage(data.response, 'bot', data.options);
+                }, 1500);
+            })
+            .catch(error => {
+                hideTyping();
+                addMessage('Error de conexion. Verifica tu internet.', 'bot');
+            });
+        }
+
+        function is_valid_email(text) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+        }
+
+        function showLeadForm() {
+            document.getElementById('leadFormContainer').style.display = 'flex';
+            document.getElementById('chatInputArea').style.display = 'none';
+        }
+
+        function hideLeadForm() {
+            document.getElementById('leadFormContainer').style.display = 'none';
+            document.getElementById('chatInputArea').style.display = 'flex';
         }
 
         function switchMode(mode) {
@@ -1146,12 +1297,16 @@
                     if (data.flow) currentFlow = data.flow;
                     addMessage(data.response, 'bot', data.options);
                 }
+                if (currentFlow === 'ask_name') {
+                    showLeadForm();
+                }
             })
             .catch(() => {
                 hideTyping();
-                addMessage('Hola, Soy Carolina, tu asesora virtual de Dollar Working. Te ayudo a crear tu negocio digital desde solo 1 dolar. Para comenzar, necesito conocerte un poco. Cual es tu nombre?', 'bot');
-                currentFlow = 'ask_name';
+                addMessage('Hola, soy Carolina, tu asesora de Dollar Working, un gusto saludarte.', 'bot');
+                showLeadForm();
             });
+        });
         });
     </script>
 </body>
