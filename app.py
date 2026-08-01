@@ -174,7 +174,7 @@ def get_welcome_message():
 
 def get_ask_email(name):
     return {
-        "response": f"Mucho gusto, {name}! Para poder enviarte informacion personalizada, cual es tu correo electronico?",
+        "response": f"Mucho gusto, {name}. Para poder enviarte informacion personalizada, cual es tu correo electronico?",
         "flow": "ask_email",
         "options": [],
         "end_call": False,
@@ -183,7 +183,7 @@ def get_ask_email(name):
 
 def get_ask_phone(name, email):
     return {
-        "response": f"Perfecto, {name}. Un ultimo dato: cual es tu numero de WhatsApp? Asi nuestro equipo puede contactarte directamente.",
+        "response": "Perfecto. Un ultimo dato: cual es tu numero de WhatsApp? Asi nuestro equipo puede contactarte directamente.",
         "flow": "ask_phone",
         "options": [],
         "end_call": False,
@@ -192,7 +192,7 @@ def get_ask_phone(name, email):
 
 def get_discovery_web(name):
     return {
-        "response": f"Excelente, {name}! Me gustaria saber si ya cuentas con una pagina web de tu negocio.",
+        "response": "Excelente! Me gustaria saber si ya cuentas con una pagina web de tu negocio.",
         "flow": "discovery_web",
         "options": [
             {"label": "Si, ya tengo pagina web", "value": "has_web_yes"},
@@ -205,7 +205,7 @@ def get_discovery_web(name):
 def get_discovery_store(name, has_web):
     if has_web:
         return {
-            "response": f"Excelente, {name}! Cuanteme, esa pagina web tiene tienda en linea?",
+            "response": "Excelente! Cuanteme, esa pagina web tiene tienda en linea?",
             "flow": "discovery_store",
             "options": [
                 {"label": "Si, ya tengo tienda", "value": "has_store_yes"},
@@ -215,7 +215,7 @@ def get_discovery_store(name, has_web):
         }
     else:
         return {
-            "response": f"Perfecto, {name}. Cuanteme, necesitas una tienda en linea para vender tus productos?",
+            "response": "Perfecto. Cuanteme, necesitas una tienda en linea para vender tus productos?",
             "flow": "discovery_store",
             "options": [
                 {"label": "Si, me interesa", "value": "needs_store_yes"},
@@ -228,7 +228,7 @@ def get_discovery_store(name, has_web):
 def get_discovery_chatbot(name, has_store):
     if has_store:
         return {
-            "response": f"Muy bien, {name}. Esa tienda tiene algun chatbot que responda a tus clientes automaticamente?",
+            "response": "Muy bien. Esa tienda tiene algun chatbot que responda a tus clientes automaticamente?",
             "flow": "discovery_chatbot",
             "options": [
                 {"label": "Si, ya tengo chatbot", "value": "has_chatbot_yes"},
@@ -238,7 +238,7 @@ def get_discovery_chatbot(name, has_store):
         }
     else:
         return {
-            "response": f"Entendido, {name}. Necesitas un chatbot que responda a tus clientes 24/7?",
+            "response": "Entendido. Necesitas un chatbot que responda a tus clientes 24/7?",
             "flow": "discovery_chatbot",
             "options": [
                 {"label": "Si, me interesa", "value": "needs_chatbot_yes"},
@@ -251,7 +251,7 @@ def get_discovery_chatbot(name, has_store):
 def get_discovery_agent(name, has_chatbot):
     if has_chatbot:
         return {
-            "response": f"Genial, {name}. Ese chatbot es inteligente o solo responde preguntas basicas? Tiene algun agente de IA que automatice tareas?",
+            "response": "Genial. Ese chatbot es inteligente o solo responde preguntas basicas? Tiene algun agente de IA que automatice tareas?",
             "flow": "discovery_agent",
             "options": [
                 {"label": "Si, tiene IA completa", "value": "has_agent_yes"},
@@ -261,7 +261,7 @@ def get_discovery_agent(name, has_chatbot):
         }
     else:
         return {
-            "response": f"{name}, te gustaria tener un agente de IA que automatice tareas y aprenda de tu negocio?",
+            "response": "Te gustaria tener un agente de IA que automatice tareas y aprenda de tu negocio?",
             "flow": "discovery_agent",
             "options": [
                 {"label": "Si, me interesa", "value": "needs_agent_yes"},
@@ -274,7 +274,7 @@ def get_discovery_agent(name, has_chatbot):
 def get_discovery_ia_records(name, has_agent):
     if has_agent:
         return {
-            "response": f"Excelente, {name}. Ya conoces IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
+            "response": "Excelente. Ya conoces IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
             "flow": "discovery_ia_records",
             "options": [
                 {"label": "Si, ya tengo IA-Records", "value": "has_ia_records_yes"},
@@ -284,7 +284,7 @@ def get_discovery_ia_records(name, has_agent):
         }
     else:
         return {
-            "response": f"{name}, te gustaria tener IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
+            "response": "Te gustaria tener IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
             "flow": "discovery_ia_records",
             "options": [
                 {"label": "Si, me interesa", "value": "needs_ia_records_yes"},
@@ -353,7 +353,7 @@ def get_discovery_summary(
     summary_text = "\n".join(response_parts)
 
     return {
-        "response": f"{name}, esto es lo que encontre:\n\n{summary_text}\n\nTe recomiendo el Plan {plan} ({price}). Con este plan obtienes {desc}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme.\n\nQuieres avanzar con este plan?",
+        "response": f"Esto es lo que encontre:\n\n{summary_text}\n\nTe recomiendo el Plan {plan} ({price}). Con este plan obtienes {desc}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme.\n\nQuieres avanzar con este plan?",
         "flow": "confirm_plan",
         "plan": plan,
         "options": [
@@ -416,7 +416,7 @@ def get_recommend_plan(interest, name):
     rec = recommendations.get(interest, recommendations["interest_todos"])
 
     return {
-        "response": f"{name}, basado en lo que me cuentas, te recomiendo el Plan {rec['plan']} ({rec['price']}).\n\nCon este plan obtienes {rec['desc']}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme. Sin riesgos.\n\nQuieres avanzar con este plan?",
+        "response": f"Basado en lo que me cuentas, te recomiendo el Plan {rec['plan']} ({rec['price']}).\n\nCon este plan obtienes {rec['desc']}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme. Sin riesgos.\n\nQuieres avanzar con este plan?",
         "flow": "confirm_plan",
         "plan": rec["plan"],
         "options": [
@@ -430,7 +430,7 @@ def get_recommend_plan(interest, name):
 
 def get_close_message(plan_name, name):
     return {
-        "response": f"Excelente decision, {name}! El Plan {plan_name} es perfecto para arrancar tu negocio digital.\n\nNuestro equipo se pondra en contacto contigo por WhatsApp para coordinar los detalles y comenzar tu proyecto.\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
+        "response": f"Excelente decision! El Plan {plan_name} es perfecto para arrancar tu negocio digital.\n\nNuestro equipo se pondra en contacto contigo por WhatsApp para coordinar los detalles y comenzar tu proyecto.\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
         "flow": "conversion",
         "options": [
             {
@@ -500,7 +500,7 @@ def get_faq_answer(option):
 
 def get_farewell(name):
     return {
-        "response": f"Fue un gusto ayudarte, {name}! Si tienes otra pregunta, aqui estare. Y si ya quieres dar el paso, escribenos por WhatsApp y arrancamos tu negocio digital hoy mismo.",
+        "response": "Fue un gusto ayudarte! Si tienes otra pregunta, aqui estare. Y si ya quieres dar el paso, escribenos por WhatsApp y arrancamos tu negocio digital hoy mismo.",
         "flow": "end",
         "options": [],
         "end_call": True,
@@ -657,7 +657,7 @@ def chat():
             if message_lower == "need_more_info":
                 return jsonify(
                     {
-                        "response": f"{name}, todos nuestros planes incluyen hosting, SSL, soporte 24/7 y pago contra entrega.\n\nElige el que mas se ajuste a tu negocio:",
+                        "response": "Todos nuestros planes incluyen hosting, SSL, soporte 24/7 y pago contra entrega.\n\nElige el que mas se ajuste a tu negocio:",
                         "flow": "choose_plan",
                         "options": [
                             {"label": "$1 USD - LanZaTE YA", "value": "plan_1"},
@@ -725,7 +725,7 @@ def chat():
         ]:
             return jsonify(
                 {
-                    "response": f"{name}, no hay presion. Solo recuerda que no hay riesgo: pagas unicamente cuando recibas tu producto y estes conforme. Cuando quieras retomar, aqui estare.",
+                    "response": "No hay presion. Solo recuerda que no hay riesgo: pagas unicamente cuando recibas tu producto y estes conforme. Cuando quieras retomar, aqui estare.",
                     "flow": "confirm_plan",
                     "options": [
                         {"label": "Recibir info por WhatsApp", "value": "recibir_info"},
