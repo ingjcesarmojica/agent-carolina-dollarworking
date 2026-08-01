@@ -590,6 +590,8 @@
         let chatHistory = [];
         let ringtoneInterval = null;
         let ringtoneCtx = null;
+        let currentFlow = '';
+        let userData = { name: '', email: '', phone: '' };
 
         const CHAT_API_URL = '/api/chat';
         const SPEAK_API_URL = '/api/speak';
@@ -669,6 +671,14 @@
 
             if (!message) return;
 
+            if (currentFlow === 'ask_name') {
+                userData.name = message;
+            } else if (currentFlow === 'ask_email') {
+                userData.email = message;
+            } else if (currentFlow === 'ask_phone') {
+                userData.phone = message;
+            }
+
             addMessage(message, 'user');
             input.value = '';
 
@@ -678,7 +688,11 @@
             fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({
+                    message: message,
+                    flow: currentFlow,
+                    user_data: userData
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -688,6 +702,10 @@
                 if (data.error) {
                     addMessage('Lo siento, hubo un error. Intenta de nuevo.', 'bot');
                     return;
+                }
+
+                if (data.flow) {
+                    currentFlow = data.flow;
                 }
 
                 addMessage(data.response, 'bot', data.options);
@@ -767,7 +785,11 @@
             fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: value })
+                body: JSON.stringify({
+                    message: value,
+                    flow: currentFlow,
+                    user_data: userData
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -776,6 +798,10 @@
                 if (data.error) {
                     addMessage('Lo siento, hubo un error. Intenta de nuevo.', 'bot');
                     return;
+                }
+
+                if (data.flow) {
+                    currentFlow = data.flow;
                 }
 
                 addMessage(data.response, 'bot', data.options);
@@ -900,7 +926,11 @@
             fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({
+                    message: message,
+                    flow: currentFlow,
+                    user_data: userData
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -908,6 +938,10 @@
                     showError("Error procesando tu mensaje.");
                     startListening();
                     return;
+                }
+
+                if (data.flow) {
+                    currentFlow = data.flow;
                 }
 
                 speakCallText(data.response, data.end_call);
@@ -1036,28 +1070,26 @@
         window.addEventListener('load', function() {
             document.getElementById('statusIndicator').textContent = 'Modo chat activo';
             showTyping();
+            currentFlow = '';
+            userData = { name: '', email: '', phone: '' };
 
             fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: 'hola' })
+                body: JSON.stringify({ message: 'hola', flow: '', user_data: {} })
             })
             .then(response => response.json())
             .then(data => {
                 hideTyping();
                 if (data.response) {
+                    if (data.flow) currentFlow = data.flow;
                     addMessage(data.response, 'bot', data.options);
                 }
             })
             .catch(() => {
                 hideTyping();
-                addMessage('Hola, Soy Carolina, tu asesora virtual en Dollar Working. En que puedo ayudarte hoy?', 'bot', [
-                    {"label": "Pagina Web", "value": "pagina_web"},
-                    {"label": "Tienda Online", "value": "tienda_online"},
-                    {"label": "Chatbot", "value": "chatbot"},
-                    {"label": "Agente de IA", "value": "agente_ia"},
-                    {"label": "Me gustaria recibir informacion de como puedo iniciar mi negocio con Dollar Working", "value": "no_se"}
-                ]);
+                addMessage('Hola, Soy Carolina, tu asesora virtual de Dollar Working. Te ayudo a crear tu negocio digital desde solo 1 dolar. Para comenzar, necesito conocerte un poco. Cual es tu nombre?', 'bot');
+                currentFlow = 'ask_name';
             });
         });
     </script>
