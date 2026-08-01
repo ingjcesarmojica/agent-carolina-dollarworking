@@ -84,7 +84,7 @@
             height: 100%;
             border-radius: 50%;
             border: 3px solid #ffc704;
-            background: #e2e8f0 url('images/avatar.png') center/cover;
+            background: #e2e8f0 url('/static/images/avatar.png') center/cover;
             position: relative;
             z-index: 2;
         }
@@ -254,9 +254,9 @@
         .option-btn {
             padding: 10px 16px;
             border-radius: 20px;
-            border: 2px solid #306eff;
-            background: transparent;
-            color: #306eff;
+            border: none;
+            background: #306eff;
+            color: #ffffff;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
@@ -270,41 +270,42 @@
         }
 
         .option-btn:hover {
-            background: #306eff;
-            color: #ffffff;
+            background: #ffc704;
+            color: #14173f;
             transform: translateX(4px);
         }
 
         .option-btn.secondary {
-            border-color: #ffc704;
-            color: #ffc704;
-        }
-
-        .option-btn.secondary:hover {
             background: #ffc704;
             color: #14173f;
         }
 
+        .option-btn.secondary:hover {
+            background: #306eff;
+            color: #ffffff;
+        }
+
         .option-btn.menu-btn {
-            border-color: #14173f;
-            color: #8899bb;
-            background: rgba(20, 23, 63, 0.5);
+            background: transparent;
+            border: 2px solid #306eff;
+            color: #306eff;
         }
 
         .option-btn.menu-btn:hover {
-            background: #062462;
+            background: #306eff;
             color: #ffffff;
             border-color: #306eff;
         }
 
         .option-btn.whatsapp-btn {
-            border-color: #25d366;
-            color: #25d366;
+            background: #25d366;
+            color: #ffffff;
         }
 
         .option-btn.whatsapp-btn:hover {
-            background: #25d366;
+            background: #128c7e;
             color: #ffffff;
+            transform: translateX(4px);
         }
 
         .chat-input-area {
