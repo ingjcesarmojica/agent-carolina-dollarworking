@@ -7,7 +7,7 @@ import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
-INDEX_NAME = "tusabogados-laboral"
+INDEX_NAME = "dollar-working"
 DIMENSION = 768
 
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claudia García - Abogada Laboral</title>
+    <title>Carolina - Asesora Virtual Dollar Working</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -12,22 +12,22 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #03203f;
+            background: #14173f;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #ffffff;
         }
-        
+
         .app-container {
             width: 380px;
             height: 700px;
-            background: #03203f;
-            border: 1px solid #185FA5;
+            background: #14173f;
+            border: 1px solid #306eff;
             border-radius: 30px;
             position: relative;
             overflow: hidden;
@@ -35,54 +35,60 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .header {
             text-align: center;
-            padding: 20px 20px 10px;
+            padding: 12px 20px 10px;
             flex-shrink: 0;
+            background: #062462;
+            border-bottom: 2px solid #306eff;
         }
-        
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffc704;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
         .logo-container {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             margin-bottom: 15px;
+            padding-left: 15px;
         }
-        
-        .scales-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
+
+        .logo-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 14px;
+            object-fit: contain;
         }
-        
-        .logo-text {
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-        }
-        
+
         .profile-section {
             text-align: center;
             position: relative;
         }
-        
+
         .avatar-container {
             width: 80px;
             height: 80px;
             margin: 0 auto 10px;
             position: relative;
         }
-        
+
         .avatar {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 3px solid #85B7EB;
-            background: #e2e8f0 url('https://bidamericas.com/tusabogados/foto.png') center/cover;
+            border: 3px solid #ffc704;
+            background: #e2e8f0 url('images/avatar.png') center/cover;
             position: relative;
             z-index: 2;
         }
-        
+
         .online-badge {
             position: absolute;
             top: 10px;
@@ -95,15 +101,15 @@
             border-radius: 8px;
             white-space: nowrap;
             z-index: 3;
-            border: 2px solid #03203f;
+            border: 2px solid #062462;
             animation: pulseBadge 2s ease-in-out infinite;
         }
-        
+
         @keyframes pulseBadge {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
         }
-        
+
         .pulse-rings {
             position: absolute;
             top: 50%;
@@ -114,72 +120,41 @@
             z-index: 1;
             opacity: 1;
         }
-        
+
         .pulse-rings.active {
             opacity: 1;
         }
-        
+
         .pulse-ring {
             position: absolute;
-            border: 2px solid rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(48, 110, 255, 0.4);
             border-radius: 50%;
             width: 100%;
             height: 100%;
             animation: pulse 2s ease-out infinite;
         }
-        
+
         .pulse-ring:nth-child(2) { animation-delay: 0.3s; }
         .pulse-ring:nth-child(3) { animation-delay: 0.6s; }
-        
+
         @keyframes pulse {
             0% { transform: scale(0.75); opacity: 0.8; }
             100% { transform: scale(1.2); opacity: 0; }
         }
-        
+
         .profile-name {
             font-size: 18px;
             font-weight: 700;
             color: #ffffff;
             margin-bottom: 2px;
         }
-        
+
         .profile-title {
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.8);
+            color: #ffc704;
             font-weight: 500;
         }
-        
-        .mode-toggle {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px 20px;
-            flex-shrink: 0;
-        }
-        
-        .mode-btn {
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .mode-btn.active {
-            background: rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-        
-        .mode-btn:hover {
-            background: rgba(23, 43, 74, 0.6);
-        }
-        
+
         .content-area {
             flex: 1;
             display: flex;
@@ -187,78 +162,16 @@
             overflow: hidden;
             min-height: 0;
         }
-        
-        .call-view, .chat-view {
+
+        .chat-view {
             flex: 1;
-            display: none;
+            display: flex;
             flex-direction: column;
             min-height: 0;
             overflow: hidden;
-        }
-        
-        .call-view.active, .chat-view.active {
-            display: flex;
-        }
-        
-        .call-view {
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .action-button {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-            transition: all 0.3s ease;
-            font-size: 24px;
-            position: relative;
-            z-index: 3;
-        }
-        
-        .whatsapp-button {
-            background: #25d366;
-            color: #ffffff;
-        }
-        
-        .whatsapp-button:hover {
-            background: #128c7e;
-            transform: scale(1.05);
-        }
-        
-        .end-call-button {
-            background: #ef4444;
-            color: #ffffff;
-            display: none;
-        }
-        
-        .end-call-button:hover {
-            background: #dc2626;
-            transform: scale(1.05);
-        }
-        
-        .button-label {
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 500;
-            margin-top: 12px;
-            text-align: center;
-        }
-        
-        .call-view.calling .whatsapp-button { display: none; }
-        .call-view.calling .end-call-button { display: flex; }
-        .call-view:not(.calling) .end-call-button { display: none; }
-        
-        .chat-view {
             padding: 0;
         }
-        
+
         .chat-messages {
             flex: 1;
             overflow-y: auto;
@@ -268,131 +181,202 @@
             gap: 10px;
             min-height: 0;
         }
-        
+
         .chat-messages::-webkit-scrollbar {
             width: 4px;
         }
-        
+
         .chat-messages::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: #306eff;
             border-radius: 2px;
         }
-        
+
         .message {
             max-width: 85%;
             padding: 10px 14px;
             border-radius: 16px;
             font-size: 13px;
-            line-height: 1.4;
+            line-height: 1.5;
             word-wrap: break-word;
         }
-        
+
         .message.bot {
             align-self: flex-start;
-            background: #0a2f57;
+            background: #062462;
             color: #ffffff;
             border-bottom-left-radius: 4px;
+            border: 1px solid #306eff;
         }
-        
+
         .message.user {
             align-self: flex-end;
-            background: #25d366;
+            background: #306eff;
             color: #ffffff;
             border-bottom-right-radius: 4px;
         }
-        
+
         .message.typing {
-            background: #0a2f57;
+            background: #062462;
+            border: 1px solid #306eff;
         }
-        
+
         .typing-dots {
             display: flex;
             gap: 4px;
             padding: 4px 0;
         }
-        
+
         .typing-dots span {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
+            background: #ffc704;
             animation: typingBounce 1.4s infinite ease-in-out both;
         }
-        
+
         .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
         .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
-        
+
         @keyframes typingBounce {
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
-        
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 4px 0 4px 0;
+            align-self: flex-start;
+            max-width: 95%;
+        }
+
+        .option-btn {
+            padding: 10px 16px;
+            border-radius: 20px;
+            border: 2px solid #306eff;
+            background: transparent;
+            color: #306eff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            text-align: left;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover {
+            background: #306eff;
+            color: #ffffff;
+            transform: translateX(4px);
+        }
+
+        .option-btn.secondary {
+            border-color: #ffc704;
+            color: #ffc704;
+        }
+
+        .option-btn.secondary:hover {
+            background: #ffc704;
+            color: #14173f;
+        }
+
+        .option-btn.menu-btn {
+            border-color: #14173f;
+            color: #8899bb;
+            background: rgba(20, 23, 63, 0.5);
+        }
+
+        .option-btn.menu-btn:hover {
+            background: #062462;
+            color: #ffffff;
+            border-color: #306eff;
+        }
+
+        .option-btn.whatsapp-btn {
+            border-color: #25d366;
+            color: #25d366;
+        }
+
+        .option-btn.whatsapp-btn:hover {
+            background: #25d366;
+            color: #ffffff;
+        }
+
         .chat-input-area {
             padding: 10px 15px 15px;
             display: flex;
             gap: 8px;
-            background: #0a2f57;
+            background: #062462;
             flex-shrink: 0;
+            border-top: 1px solid #306eff;
         }
-        
+
         .chat-input {
             flex: 1;
             padding: 10px 15px;
             border-radius: 20px;
-            border: none;
-            background: #0c447c;
+            border: 1px solid #306eff;
+            background: #14173f;
             color: #ffffff;
             font-size: 14px;
             font-family: 'Inter', sans-serif;
             outline: none;
         }
-        
+
         .chat-input::placeholder {
             color: rgba(255, 255, 255, 0.5);
         }
-        
+
         .chat-input:focus {
-            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffc704;
         }
-        
+
         .send-btn {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             border: none;
-            background: #25d366;
-            color: #ffffff;
+            background: #ffc704;
+            color: #14173f;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
         }
-        
+
         .send-btn:hover {
-            background: #128c7e;
+            background: #306eff;
+            color: #ffffff;
             transform: scale(1.05);
         }
-        
+
         .send-btn:disabled {
             background: rgba(255, 255, 255, 0.2);
             cursor: not-allowed;
             transform: none;
         }
-        
+
         .send-btn svg {
             width: 18px;
             height: 18px;
         }
-        
+
         .status-indicator {
             text-align: center;
             padding: 8px;
             font-size: 11px;
             color: rgba(255, 255, 255, 0.7);
             flex-shrink: 0;
+            background: #062462;
+            border-top: 1px solid #306eff;
         }
-        
+
         .error-message {
             position: absolute;
             top: 10px;
@@ -407,7 +391,7 @@
             display: none;
             z-index: 10;
         }
-        
+
         .speak-btn {
             position: absolute;
             bottom: 4px;
@@ -416,7 +400,7 @@
             height: 24px;
             border-radius: 50%;
             border: none;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(48, 110, 255, 0.3);
             color: #ffffff;
             cursor: pointer;
             display: flex;
@@ -425,15 +409,16 @@
             font-size: 12px;
             transition: all 0.2s ease;
         }
-        
+
         .speak-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: #306eff;
         }
-        
+
         .speak-btn.playing {
-            background: #25d366;
+            background: #ffc704;
+            color: #14173f;
         }
-        
+
         @media (max-width: 420px) {
             .app-container {
                 width: 100%;
@@ -446,15 +431,9 @@
 <body>
     <div class="app-container">
         <div class="error-message" id="errorMessage"></div>
-        
+
         <div class="header">
-            <div class="logo-container">
-                <svg class="scales-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2M8 11.5L6.5 16.5L11.5 17.2L13 12.2L8 11.5M16 11.5L13 12.2L14.5 17.2L19.5 16.5L18 11.5L16 11.5Z"/>
-                </svg>
-                <div class="logo-text">tusabogados.com</div>
-            </div>
-            
+            <div class="header-title">Dollar Working</div>
             <div class="profile-section">
                 <div class="online-badge">En línea</div>
                 <div class="avatar-container">
@@ -465,21 +444,15 @@
                         <div class="pulse-ring"></div>
                     </div>
                 </div>
-                
-                <div class="profile-name">Claudia García</div>
-                <div class="profile-title">Abogada Laboral</div>
+
+                <div class="profile-name">Carolina</div>
+                <div class="profile-title">Asesora Virtual</div>
             </div>
         </div>
-        
-        <div class="mode-toggle">
-            <button class="mode-btn active" id="chatModeBtn" onclick="switchMode('chat')">Chat</button>
-            <button class="mode-btn" id="callModeBtn" onclick="switchMode('call')">Llamada</button>
-        </div>
-        
+
         <div class="content-area">
             <div class="chat-view active" id="chatView">
-                <div class="chat-messages" id="chatMessages">
-                </div>
+                <div class="chat-messages" id="chatMessages"></div>
                 <div class="chat-input-area">
                     <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)">
                     <button class="send-btn" id="sendBtn" onclick="sendChatText()">
@@ -489,122 +462,38 @@
                     </button>
                 </div>
             </div>
-            
-            <div class="call-view" id="callView">
-                <button class="action-button whatsapp-button" id="startCallBtn" onclick="startCall()">
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                        <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-                    </svg>
-                </button>
-                
-                <button class="action-button end-call-button" id="endCallBtn" onclick="endCall()">
-                    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-                        <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.7l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
-                    </svg>
-                </button>
-                
-                <div class="button-label" id="buttonLabel">Llamar</div>
-            </div>
         </div>
-        
-        <div class="status-indicator" id="statusIndicator">Listo para hablar</div>
+
+        <div class="status-indicator" id="statusIndicator">Listo para ayudarte</div>
     </div>
 
     <script>
-        let currentMode = 'chat';
-        let isCalling = false;
-        let isListening = false;
         let isSpeaking = false;
-        let recognition = null;
         let currentAudio = null;
         let chatHistory = [];
-        let ringtoneInterval = null;
-        let ringtoneCtx = null;
-        
+
         const CHAT_API_URL = '/api/chat';
         const SPEAK_API_URL = '/api/speak';
-        
-        function switchMode(mode) {
-            currentMode = mode;
-            
-            document.getElementById('chatModeBtn').classList.toggle('active', mode === 'chat');
-            document.getElementById('callModeBtn').classList.toggle('active', mode === 'call');
-            
-            document.getElementById('chatView').classList.toggle('active', mode === 'chat');
-            document.getElementById('callView').classList.toggle('active', mode === 'call');
-            
-            if (mode === 'call') {
-                document.getElementById('statusIndicator').textContent = 'Listo para hablar';
-            } else {
-                endCall();
-                stopRingtone();
-                document.getElementById('statusIndicator').textContent = 'Modo chat activo';
-            }
-        }
-        
-        function playRingtone() {
-            stopRingtone();
-            ringtoneCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            function playTone() {
-                if (!ringtoneCtx || !isCalling) return;
-                
-                const osc1 = ringtoneCtx.createOscillator();
-                const osc2 = ringtoneCtx.createOscillator();
-                const gainNode = ringtoneCtx.createGain();
-                
-                osc1.type = 'sine';
-                osc2.type = 'sine';
-                osc1.frequency.value = 420;
-                osc2.frequency.value = 480;
-                
-                gainNode.gain.setValueAtTime(0.15, ringtoneCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, ringtoneCtx.currentTime + 0.4);
-                
-                osc1.connect(gainNode);
-                osc2.connect(gainNode);
-                gainNode.connect(ringtoneCtx.destination);
-                
-                osc1.start(ringtoneCtx.currentTime);
-                osc2.start(ringtoneCtx.currentTime);
-                osc1.stop(ringtoneCtx.currentTime + 0.4);
-                osc2.stop(ringtoneCtx.currentTime + 0.4);
-            }
-            
-            playTone();
-            ringtoneInterval = setInterval(playTone, 1200);
-        }
-        
-        function stopRingtone() {
-            if (ringtoneInterval) {
-                clearInterval(ringtoneInterval);
-                ringtoneInterval = null;
-            }
-            if (ringtoneCtx) {
-                ringtoneCtx.close().catch(() => {});
-                ringtoneCtx = null;
-            }
-        }
-        
+
         function handleKeyPress(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 sendChatText();
             }
         }
-        
+
         function sendChatText() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            
+
             if (!message) return;
-            
+
             addMessage(message, 'user');
             input.value = '';
-            
+
             document.getElementById('sendBtn').disabled = true;
             showTyping();
-            
+
             fetch(CHAT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -614,17 +503,13 @@
             .then(data => {
                 hideTyping();
                 document.getElementById('sendBtn').disabled = false;
-                
+
                 if (data.error) {
                     addMessage('Lo siento, hubo un error. Intenta de nuevo.', 'bot');
                     return;
                 }
-                
-                addMessage(data.response, 'bot');
-                
-                if (data.end_call) {
-                    switchMode('chat');
-                }
+
+                addMessage(data.response, 'bot', data.options);
             })
             .catch(error => {
                 hideTyping();
@@ -632,16 +517,16 @@
                 addMessage('Error de conexión. Verifica tu internet.', 'bot');
             });
         }
-        
-        function addMessage(text, sender) {
+
+        function addMessage(text, sender, options) {
             const container = document.getElementById('chatMessages');
             const msg = document.createElement('div');
             msg.className = `message ${sender}`;
-            
+
             const textSpan = document.createElement('span');
-            textSpan.textContent = text;
+            textSpan.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             msg.appendChild(textSpan);
-            
+
             if (sender === 'bot') {
                 const speakBtn = document.createElement('button');
                 speakBtn.className = 'speak-btn';
@@ -650,11 +535,72 @@
                 msg.style.position = 'relative';
                 msg.appendChild(speakBtn);
             }
-            
+
             container.appendChild(msg);
+
+            if (options && options.length > 0) {
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+
+                options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+
+                    if (option.value === 'menu' || option.value === 'inicio') {
+                        btn.classList.add('menu-btn');
+                    } else if (option.value === 'whatsapp' || (option.url && option.url.includes('wa.me'))) {
+                        btn.classList.add('whatsapp-btn');
+                    } else if (option.value === 'comparar' || option.value === 'testimonios' || option.value === 'faq' || option.value === 'recibir_info') {
+                        btn.classList.add('secondary');
+                    }
+
+                    btn.textContent = option.label;
+
+                    if (option.url) {
+                        btn.onclick = function() {
+                            window.open(option.url, '_blank');
+                        };
+                    } else {
+                        btn.onclick = function() {
+                            handleOptionClick(option.value, option.label);
+                        };
+                    }
+
+                    optionsContainer.appendChild(btn);
+                });
+
+                container.appendChild(optionsContainer);
+            }
+
             container.scrollTop = container.scrollHeight;
         }
-        
+
+        function handleOptionClick(value, label) {
+            addMessage(label, 'user');
+            showTyping();
+
+            fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideTyping();
+
+                if (data.error) {
+                    addMessage('Lo siento, hubo un error. Intenta de nuevo.', 'bot');
+                    return;
+                }
+
+                addMessage(data.response, 'bot', data.options);
+            })
+            .catch(error => {
+                hideTyping();
+                addMessage('Error de conexión. Verifica tu internet.', 'bot');
+            });
+        }
+
         function showTyping() {
             const container = document.getElementById('chatMessages');
             const typing = document.createElement('div');
@@ -665,13 +611,13 @@
             container.scrollTop = container.scrollHeight;
             document.getElementById('pulseRings').classList.add('active');
         }
-        
+
         function hideTyping() {
             const typing = document.getElementById('typingIndicator');
             if (typing) typing.remove();
             document.getElementById('pulseRings').classList.remove('active');
         }
-        
+
         function speakMessage(text, btn) {
             if (isSpeaking && currentAudio) {
                 currentAudio.pause();
@@ -680,10 +626,10 @@
                 document.querySelectorAll('.speak-btn').forEach(b => b.classList.remove('playing'));
                 if (btn.classList.contains('playing')) return;
             }
-            
+
             if (btn) btn.classList.add('playing');
             isSpeaking = true;
-            
+
             fetch(SPEAK_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -714,180 +660,40 @@
                 if (btn) btn.classList.remove('playing');
             });
         }
-        
-        function startCall() {
-            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
-                showError("Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.");
-                return;
-            }
-            
-            isCalling = true;
-            const callView = document.getElementById('callView');
-            callView.classList.add('calling');
-            document.getElementById('buttonLabel').textContent = 'Finalizar';
-            document.getElementById('statusIndicator').textContent = 'Conectando...';
-            
-            playRingtone();
-            sendCallMessage('hola');
-        }
-        
-        function endCall() {
-            isCalling = false;
-            isListening = false;
-            isSpeaking = false;
-            stopRingtone();
-            
-            if (recognition) {
-                try { recognition.stop(); } catch(e) {}
-                recognition = null;
-            }
-            
-            if (currentAudio) {
-                try { currentAudio.pause(); currentAudio = null; } catch(e) {}
-            }
-            
-            if ('speechSynthesis' in window) speechSynthesis.cancel();
-            
-            const callView = document.getElementById('callView');
-            callView.classList.remove('calling');
-            document.getElementById('buttonLabel').textContent = 'Llamar';
-            document.getElementById('pulseRings').classList.remove('active');
-            
-            if (currentMode === 'call') {
-                document.getElementById('statusIndicator').textContent = 'Llamada finalizada';
-                setTimeout(() => {
-                    if (!isCalling && currentMode === 'call') {
-                        document.getElementById('statusIndicator').textContent = 'Listo para hablar';
-                    }
-                }, 3000);
-            }
-        }
-        
-        function sendCallMessage(message) {
-            document.getElementById('statusIndicator').innerHTML = "Procesando<span class='typing-dots'><span></span><span></span><span></span></span>";
-            
-            fetch(CHAT_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showError("Error procesando tu mensaje.");
-                    startListening();
-                    return;
-                }
-                
-                speakCallText(data.response, data.end_call);
-            })
-            .catch(error => {
-                showError("Error de conexión.");
-                startListening();
-            });
-        }
-        
-        function speakCallText(text, endCallAfter) {
-            isSpeaking = true;
-            stopRingtone();
-            document.getElementById('statusIndicator').textContent = "Hablando...";
-            document.getElementById('pulseRings').classList.add('active');
-            
-            fetch(SPEAK_API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.audioUrl) {
-                    currentAudio = new Audio(data.audioUrl);
-                    currentAudio.onended = function() {
-                        isSpeaking = false;
-                        currentAudio = null;
-                        document.getElementById('pulseRings').classList.remove('active');
-                        if (endCallAfter) {
-                            endCall();
-                        } else {
-                            startListening();
-                        }
-                    };
-                    currentAudio.onerror = function() {
-                        isSpeaking = false;
-                        currentAudio = null;
-                        document.getElementById('pulseRings').classList.remove('active');
-                        if (endCallAfter) endCall();
-                        else startListening();
-                    };
-                    currentAudio.play();
-                } else {
-                    isSpeaking = false;
-                    document.getElementById('pulseRings').classList.remove('active');
-                    if (endCallAfter) endCall();
-                    else startListening();
-                }
-            })
-            .catch(() => {
-                isSpeaking = false;
-                document.getElementById('pulseRings').classList.remove('active');
-                if (endCallAfter) endCall();
-                else startListening();
-            });
-        }
-        
-        function startListening() {
-            if (!isCalling) return;
-            
-            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'es-MX';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            
-            recognition.onstart = function() {
-                isListening = true;
-                document.getElementById('statusIndicator').textContent = "Escuchando...";
-            };
-            
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                isListening = false;
-                recognition.stop();
-                sendCallMessage(transcript);
-            };
-            
-            recognition.onerror = function(event) {
-                if (event.error !== 'no-speech' && event.error !== 'aborted') {
-                    console.error('Error reconocimiento:', event.error);
-                }
-                if (isCalling) {
-                    setTimeout(() => {
-                        if (isCalling && !isSpeaking) startListening();
-                    }, 1000);
-                }
-            };
-            
-            recognition.onend = function() {
-                if (isCalling && !isSpeaking && !isListening) {
-                    setTimeout(() => startListening(), 500);
-                }
-            };
-            
-            try {
-                recognition.start();
-            } catch(e) {
-                console.error('Error micrófono:', e);
-            }
-        }
-        
+
         function showError(message) {
             const el = document.getElementById('errorMessage');
             el.textContent = message;
             el.style.display = 'block';
             setTimeout(() => { el.style.display = 'none'; }, 5000);
         }
-        
+
         window.addEventListener('load', function() {
             document.getElementById('statusIndicator').textContent = 'Modo chat activo';
+            showTyping();
+
+            fetch(CHAT_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'hola' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideTyping();
+                if (data.response) {
+                    addMessage(data.response, 'bot', data.options);
+                }
+            })
+            .catch(() => {
+                hideTyping();
+                addMessage('¡Hola! 👋 Soy Carolina, tu asesora virtual en Dollar Working. ¿En qué puedo ayudarte hoy?', 'bot', [
+                    {"label": "Página Web", "value": "pagina_web"},
+                    {"label": "Tienda Online", "value": "tienda_online"},
+                    {"label": "Chatbot", "value": "chatbot"},
+                    {"label": "Agente de IA", "value": "agente_ia"},
+                    {"label": "Me gustaría recibir información de cómo puedo iniciar mi negocio con Dollar Working", "value": "no_se"}
+                ]);
+            });
         });
     </script>
 </body>

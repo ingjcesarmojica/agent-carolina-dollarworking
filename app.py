@@ -1,11 +1,8 @@
 import os
-import io
 import asyncio
 import base64
 import re
 import json
-import tempfile
-import threading
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import logging
@@ -36,10 +33,12 @@ else:
     gemini_model = None
     GEMINI_CONFIGURED = False
     app.logger.warning(
-        "GEMINI_API_KEY no configurada - chat usar solo respuestas hardcoded"
+        "GEMINI_API_KEY no configurada - chat usando respuestas hardcoded"
     )
 
 TTS_VOICE = os.environ.get("TTS_VOICE", "es-US-PalomaNeural")
+
+WHATSAPP_NUMBER = "+573506920726"
 
 
 async def generate_edge_tts(text, voice=None):
@@ -70,13 +69,10 @@ def speak_text():
     try:
         data = request.json
         text = data.get("text", "")
-
         if not text:
             return jsonify({"error": "No text provided"}), 400
-
         app.logger.info(f"Generando audio con edge-tts: {text[:50]}...")
         audio_content = asyncio.run(generate_edge_tts(text))
-
         return jsonify(
             {
                 "audioContent": audio_content,
@@ -85,7 +81,6 @@ def speak_text():
                 "engine": "edge-tts",
             }
         )
-
     except Exception as e:
         app.logger.error(f"Error en edge-tts: {str(e)}")
         return jsonify(
@@ -99,26 +94,37 @@ def speak_text():
         )
 
 
+SYSTEM_PROMPT = """Eres Carolina, la asesora virtual de Dollar Working.
+
+## Tu personalidad
+- Eres cercana, entusiasta, resolutiva y colombiana.
+- Hablas como una asesora comercial que quiere ayudar a emprender, no como un robot corporativo.
+- Usas un tono motivador orientado a emprendedores.
+- Expresiones naturales: "¡Hola!", "Perfecto", "¡Excelente decisión!", "Tranquilo/a, para eso estoy", "¡Genial!"
+
+## Reglas
+- Responde en máximo 2-3 oraciones.
+- Sigues un flujo conversacional estructurado con opciones.
+- SIEMPRE ofreces opciones claras al usuario.
+- Cuando el usuario elige un plan, lo diriges al cierre (WhatsApp).
+- Manejas objeciones con empatía y argumentos de pago contra entrega.
+- Usas emojis de forma natural pero moderada.
+- Evitas tecnicismos; le hablas a emprendedores sin conocimientos técnicos.
+- NO modificas montos, nombres de planes ni número de contacto.
+
+## Planes
+- Plan Lanzate YA: 1 USD / $3.205 COP - Pagina web
+- Plan A Vender Se Dijo: 3 USD / $9.521 COP - Pagina web + tienda online
+- Plan Que Negociazo: 5 USD / $15.869 COP - Web + tienda + chatbot + agente de IA + IA-Records
+
+## WhatsApp
+Numero: +57 350 692 0726"""
+
+
 def gemini_response(user_message, context=""):
     if not GEMINI_CONFIGURED or gemini_model is None:
         return None
     try:
-        system_prompt = """Eres Claudia García, abogada virtual especializada en Derecho Laboral de TusAbogados.com.
-
-## Tu personalidad
-- Eres una abogada laboralista con experiencia.
-- Hablas con profesionalismo y calidez, como lo haría un abogado real.
-- Usas terminología legal cuando es apropiado, pero la explicas en lenguaje sencillo.
-- Transmites confianza, seguridad y empatía.
-- Ejemplos de expresiones naturales: "Entiendo perfectamente su situación", "Esto es algo que manejamos con frecuencia", "Le comento que en estos casos...", "Es importante que sepa que...", "Procederemos a..."
-
-## Reglas
-- Responde en máximo 2-3 oraciones.
-- Si te preguntan algo de derecho laboral, responde con precisión legal pero explicando en lenguaje simple.
-- Usa términos como: despido injustificado, justa causa, liquidación, prestaciones sociales, indemnización, conciliación, juzgado laboral, derecho laboral.
-- Siempre orienta pero NO das asesoría legal definitiva, eso lo hace el abogado humano.
-- Nunca uses expresiones informales como "genial", "perfecto", "listo", "dale". Usa: "Entiendo", "Comprendo", "Procederé a", "Le comento que"."""
-
         rag_context = ""
         if RAG_AVAILABLE:
             try:
@@ -127,19 +133,16 @@ def gemini_response(user_message, context=""):
                     rag_parts = []
                     for d in docs:
                         rag_parts.append(f"[Fuente: {d['source']}]\n{d['text']}")
-                    rag_context = (
-                        "\n\n## Base de conocimiento (usa esta información si es relevante):\n"
-                        + "\n---\n".join(rag_parts)
+                    rag_context = "\n\n## Base de conocimiento:\n" + "\n---\n".join(
+                        rag_parts
                     )
                     app.logger.info(f"RAG: {len(docs)} docs encontrados")
-                else:
-                    app.logger.info("RAG: 0 docs encontrados")
             except Exception as e:
                 app.logger.error(f"RAG error: {e}")
 
-        prompt = f"""{system_prompt}{rag_context}
+        prompt = f"""{SYSTEM_PROMPT}{rag_context}
 
-Contexto: {context}
+Contexto de la conversación: {context}
 Usuario: {user_message}"""
         response = gemini_model.generate_content(prompt)
         return response.text
@@ -148,62 +151,95 @@ Usuario: {user_message}"""
         return None
 
 
-def validate_name(name):
-    if not name or len(name.strip()) < 2:
-        return (
-            False,
-            "Por favor, indíqueme su nombre completo para proceder con la cita.",
-        )
-    if re.match(r"^[\d\s]+$", name.strip()):
-        return (
-            False,
-            "El nombre ingresado no parece válido. Por favor, indíqueme su nombre completo.",
-        )
-    return True, name.strip()
+def get_welcome_message():
+    return {
+        "response": "¡Hola! 👋 Soy **Carolina**, tu asesora virtual en Dollar Working.\n\nAyudamos a emprendedores como tú a montar su negocio digital desde solo **1 dólar**.\n\n¿Con qué te gustaría empezar hoy?",
+        "options": [
+            {"label": "Página Web", "value": "pagina_web"},
+            {"label": "Tienda Online", "value": "tienda_online"},
+            {"label": "Chatbot", "value": "chatbot"},
+            {"label": "Agente de IA", "value": "agente_ia"},
+            {
+                "label": "Me gustaría recibir información de cómo puedo iniciar mi negocio con Dollar Working",
+                "value": "no_se",
+            },
+        ],
+        "end_call": False,
+    }
 
 
-def validate_subtype(subtype):
-    if not subtype or len(subtype.strip()) < 3:
-        return (
-            False,
-            "¿Qué tipo de situación laboral está atrayendo? Por ejemplo, despido injustificado, acoso laboral, impago de prestaciones...",
-        )
-    return True, subtype.strip()
+def get_plan_comparator():
+    return {
+        "response": "Tenemos 3 planes, todos con la promesa de **pagar solo cuando recibas tus productos y estés conforme** 💪:\n\n💵 **$1 USD – Plan Lánzate YA:** tu página web.\n💵 **$3 USD – Plan A Vender Se Dijo:** página web + tienda online.\n💵 **$5 USD – Plan Que Negociazo:** página web + tienda + chatbot + agente de IA + IA-Records.",
+        "options": [
+            {"label": "$1 USD – Lánzate YA", "value": "plan_1"},
+            {"label": "$3 USD – A Vender Se Dijo", "value": "plan_3"},
+            {"label": "$5 USD – Que Negociazo", "value": "plan_5"},
+        ],
+        "end_call": False,
+    }
 
 
-def validate_description(desc):
-    if not desc or len(desc.strip()) < 5:
-        return (
-            False,
-            "Le agradecería que me describa brevemente los hechos de su caso: fechas, personas involucradas y circunstancias.",
-        )
-    return True, desc.strip()
+def get_faq_menu():
+    return {
+        "response": "Estas son las preguntas más frecuentes:",
+        "options": [
+            {"label": "¿Cuánto se demoran?", "value": "faq_demora"},
+            {"label": "¿Tienen soporte?", "value": "faq_soporte"},
+            {"label": "¿Hacen apps móviles?", "value": "faq_apps"},
+            {"label": "¿Cómo pago?", "value": "faq_pago"},
+            {"label": "Horario de atención", "value": "faq_horario"},
+        ],
+        "end_call": False,
+    }
 
 
-def validate_email(email):
-    if not email:
-        return (
-            False,
-            "¿Cuál es su correo electrónico? Lo necesito para enviarle la confirmación de la cita.",
-        )
-    if not re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
-        return (
-            False,
-            "El correo electrónico ingresado no tiene un formato válido. Por favor, verifíquelo e ingréselo nuevamente (ejemplo: nombre@correo.com).",
-        )
-    return True, email.strip()
+def get_faq_answer(option):
+    faqs = {
+        "faq_demora": {
+            "response": "Depende del plan, pero nuestro equipo te da un tiempo estimado apenas conversemos por WhatsApp.",
+            "options": [{"label": "Volver al menú", "value": "menu"}],
+        },
+        "faq_soporte": {
+            "response": "Sí, soporte técnico 24/7 y mantenimiento continuo incluido.",
+            "options": [{"label": "Volver al menú", "value": "menu"}],
+        },
+        "faq_apps": {
+            "response": "Sí, hacemos apps para iOS y Android con UI/UX profesional.",
+            "options": [{"label": "Volver al menú", "value": "menu"}],
+        },
+        "faq_pago": {
+            "response": "Solo pagas cuando recibas tu producto y quedes conforme.",
+            "options": [{"label": "Volver al menú", "value": "menu"}],
+        },
+        "faq_horario": {
+            "response": "Lunes a viernes 9am-6pm, sábados 10am-2pm, domingo cerrado.",
+            "options": [{"label": "Volver al menú", "value": "menu"}],
+        },
+    }
+    return faqs.get(
+        option,
+        {
+            "response": "¿Hay algo más en lo que pueda ayudarte?",
+            "options": [{"label": "Volver al menú", "value": "menu"}],
+            "end_call": False,
+        },
+    )
 
 
-def validate_phone(phone):
-    if not phone:
-        return False, "¿Cuál es su número de teléfono de contacto?"
-    digits = re.sub(r"[^0-9]", "", phone)
-    if len(digits) < 7 or len(digits) > 15:
-        return (
-            False,
-            "El número de teléfono ingresado no parece correcto. Por favor, verifíquelo e ingréselo sin espacios ni guiones (ejemplo: 3001234567).",
-        )
-    return True, digits
+def get_close_message(plan_name):
+    return {
+        "response": f"¡Genial! Elegiste el **{plan_name}** 🎉\n\nPara iniciar tu negocio, solo necesito tu nombre y te conecto directo con nuestro equipo por WhatsApp para coordinar los detalles.\n\nRecuerda: **no pagas nada hasta recibir tu producto y estar conforme.** ✅",
+        "options": [
+            {
+                "label": "Hablar con un asesor por WhatsApp",
+                "value": "whatsapp",
+                "url": f"https://wa.me/573506920726?text=Hola%20Carolina%2C%20quiero%20informaci%C3%B3n%20sobre%20el%20plan%20{plan_name.replace(' ', '%20')}",
+            },
+            {"label": "Tengo otra pregunta", "value": "menu"},
+        ],
+        "end_call": False,
+    }
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -221,13 +257,14 @@ def chat():
             word in message_lower
             for word in [
                 "hola",
-                "buenos días",
+                "buenos dias",
                 "buenas tardes",
                 "saludos",
                 "buenas",
-                "buenos",
-                "iniciar",
                 "empezar",
+                "iniciar",
+                "menu",
+                "inicio",
             ]
         )
 
@@ -235,245 +272,282 @@ def chat():
             word in message_lower
             for word in [
                 "gracias",
-                "adiós",
+                "adios",
                 "chao",
                 "hasta luego",
                 "no gracias",
                 "eso es todo",
+                "chau",
             ]
-        )
-
-        is_repeat = any(
-            word in message_lower
-            for word in ["repetir", "repita", "no entendí", "cómo", "que dijiste"]
-        )
-
-        is_confirm = any(
-            word in message_lower
-            for word in [
-                "sí",
-                "si",
-                "ok",
-                "de acuerdo",
-                "confirmo",
-                "dale",
-                "perfecto",
-                "va",
-            ]
-        )
-
-        is_reject = any(
-            word in message_lower
-            for word in ["no", "no me viene", "otro horario", "otra hora", "no puedo"]
         )
 
         if is_greeting:
-            for attr in [
-                "user_name",
-                "user_email",
-                "user_phone",
-                "case_description",
-                "case_subtype",
-                "appointment_time",
-            ]:
-                if hasattr(chat, attr):
-                    delattr(chat, attr)
-            response = "Buenos días. Soy Claudia García, abogada laboralista de TusAbogados.com. Le comento que estamos aquí para asistirle con su caso. Para iniciar con su consulta, ¿podría indicarme su nombre completo?"
-            return jsonify({"response": response, "end_call": False})
-
-        is_question = any(
-            word in message_lower
-            for word in [
-                "¿",
-                "?",
-                "qué",
-                "que",
-                "cómo",
-                "como",
-                "cuál",
-                "cual",
-                "cuáles",
-                "cuales",
-                "cuánto",
-                "cuanto",
-                "dónde",
-                "donde",
-                "quién",
-                "quien",
-                "por qué",
-                "por que",
-                "para qué",
-                "explica",
-                "explicame",
-                "háblame",
-                "hablame",
-                "cuéntame",
-                "cuentame",
-            ]
-        )
-
-        if is_question and not is_greeting and not is_farewell:
-            context = f"Usuario: {getattr(chat, 'user_name', 'nuevo usuario')}. Pregunta libre sobre derecho laboral."
-
-            # Try RAG first, then Gemini
-            rag_response = None
-            if RAG_AVAILABLE:
-                try:
-                    docs = search_knowledge(message, n_results=3)
-                    app.logger.info(
-                        f"RAG search: {len(docs)} docs found for '{message[:50]}'"
-                    )
-                    if docs:
-                        rag_parts = []
-                        for d in docs:
-                            rag_parts.append(f"[Fuente: {d['source']}]\n{d['text']}")
-                        rag_context = "\n---\n".join(rag_parts)
-                        rag_response = (
-                            f"Según la información disponible:\n\n{rag_context}"
-                        )
-                except Exception as e:
-                    app.logger.error(f"RAG error in chat: {e}")
-
-            if rag_response:
-                response = f"{rag_response}\n\n¿Hay algo más en lo que pueda asistirle?"
-            else:
-                gemini_resp = gemini_response(message, context=context)
-                if gemini_resp:
-                    response = (
-                        f"{gemini_resp}\n\n¿Hay algo más en lo que pueda asistirle?"
-                    )
-                else:
-                    response = "Le comento que no tengo información específica sobre esa consulta. Un abogado laboralista podrá orientarle personalmente. ¿Desea agendar una cita?"
-            return jsonify({"response": response, "end_call": False})
+            return jsonify(get_welcome_message())
 
         if is_farewell:
-            name = getattr(chat, "user_name", "")
-            if hasattr(chat, "appointment_time"):
-                response = f"Entendido, {name}. Le confirmo que un abogado laboralista se pondrá en contacto con usted en la fecha acordada. Cualquier consulta adicional, no dude en escribirnos. Saludos cordiales."
-            else:
-                response = f"Entendido, {name}. Un abogado laboralista se comunicará con usted a la brevedad. Cualquier consulta adicional, no dude en escribirnos. Saludos cordiales."
-            return jsonify({"response": response, "end_call": True})
+            return jsonify(
+                {
+                    "response": "¡Fue un gusto ayudarte! Si tienes otra pregunta, aquí estaré. Y si ya quieres dar el paso, escríbenos por WhatsApp y arrancamos tu negocio digital hoy mismo 🚀",
+                    "options": [],
+                    "end_call": True,
+                }
+            )
 
-        if is_repeat:
-            if not hasattr(chat, "user_name"):
-                response = (
-                    "Por favor, indíqueme su nombre completo para proceder con la cita."
-                )
-            elif not hasattr(chat, "case_subtype"):
-                response = "¿Qué tipo de situación laboral está atrayendo? Por ejemplo, despido injustificado, acoso laboral, impago de prestaciones..."
-            elif not hasattr(chat, "case_description"):
-                response = "Le agradecería que me describa brevemente los hechos de su caso: fechas, personas involucradas y circunstancias."
-            elif not hasattr(chat, "user_email"):
-                response = "¿Cuál es su correo electrónico? Lo necesito para enviarle la confirmación de la cita."
-            elif not hasattr(chat, "user_phone"):
-                response = "¿Cuál es su número de teléfono de contacto?"
-            elif not hasattr(chat, "appointment_time"):
-                response = "¿Le viene bien el Lunes 29 de septiembre a las 10:30 a.m.?"
-            else:
-                response = "¿Hay algo más en lo que pueda asistirle?"
-            return jsonify({"response": response, "end_call": False})
+        if message_lower in [
+            "menu",
+            "inicio",
+            "volver al menú",
+            "volver al menu",
+            "menú",
+        ]:
+            return jsonify(get_welcome_message())
+
+        if message_lower == "faq":
+            return jsonify(get_faq_menu())
+
+        if message_lower.startswith("faq_"):
+            return jsonify(get_faq_answer(message_lower))
+
+        if message_lower == "pagina_web":
+            return jsonify(
+                {
+                    "response": "Perfecto 🙌 Con el **Plan Lánzate YA (1 USD / $3.205 COP)** te entregamos tu página web con diseño responsive, hosting por 1 año y certificado SSL.",
+                    "options": [
+                        {"label": "Quiero este plan", "value": "plan_1"},
+                        {"label": "Ver otros planes", "value": "comparar"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower == "tienda_online":
+            return jsonify(
+                {
+                    "response": "¡Excelente decisión! 🛒 Con el **Plan A Vender Se Dijo (3 USD / $9.521 COP)** obtienes tu página web + tienda online con pasarela de pagos.",
+                    "options": [
+                        {"label": "Quiero este plan", "value": "plan_3"},
+                        {"label": "Ver otros planes", "value": "comparar"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower == "chatbot":
+            return jsonify(
+                {
+                    "response": "Un chatbot con IA te atiende 24/7 y se personaliza a tu negocio 🤖. Está incluido en el **Plan Que Negociazo (5 USD / $15.869 COP)**, junto con tu web, tienda, agente de IA e IA-Records.",
+                    "options": [
+                        {"label": "Quiero este plan", "value": "plan_5"},
+                        {"label": "Qué es IA-Records", "value": "ia_records"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower == "agente_ia":
+            return jsonify(
+                {
+                    "response": "Los agentes de IA automatizan tareas, procesan datos y aprenden de tu negocio con machine learning 🚀. Vienen incluidos en el **Plan Que Negociazo**.",
+                    "options": [
+                        {"label": "Quiero este plan", "value": "plan_5"},
+                        {"label": "Ver todos los planes", "value": "comparar"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower == "no_se" or message_lower == "no_se_que_necesito":
+            return jsonify(
+                {
+                    "response": "Tranquilo/a, para eso estoy 😊 Cuéntame:",
+                    "options": [
+                        {"label": "Mi negocio ya existe", "value": "comparar"},
+                        {"label": "Estoy empezando desde cero", "value": "comparar"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower == "ia_records":
+            return jsonify(
+                {
+                    "response": "IA-Records es tu ficha de presentación potenciada con IA: ayuda a que tus clientes te conozcan y confíen más rápido en tu negocio. Viene incluido en el Plan Que Negociazo.",
+                    "options": [
+                        {"label": "Quiero este plan", "value": "plan_5"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
 
         if (
-            hasattr(chat, "appointment_time")
-            and not is_confirm
-            and not is_farewell
-            and len(message.strip()) > 3
+            message_lower == "comparar"
+            or message_lower == "ver_otros_planes"
+            or message_lower == "ver_todos_los_planes"
         ):
-            context = f"Usuario: {getattr(chat, 'user_name', '')}, caso: {getattr(chat, 'case_subtype', '')}, cita ya agendada. Responde con terminología legal profesional."
-            gemini_resp = gemini_response(message, context=context)
-            if gemini_resp:
-                response = f"Le comento que {gemini_resp}\n\n¿Hay algo más en lo que pueda asistirle?"
-            else:
-                response = f"Entendido, {getattr(chat, 'user_name', '')}. He registrado su consulta. Un abogado laboralista le ampliará la información cuando se contacte con usted.\n\n¿Hay algo más en lo que pueda asistirle?"
-            return jsonify({"response": response, "end_call": False})
+            return jsonify(get_plan_comparator())
 
-        if not hasattr(chat, "appointment_time") and is_confirm:
-            chat.appointment_time = "Lunes 29 de Septiembre - 10:30 am"
-            name = getattr(chat, "user_name", "")
-            email = getattr(chat, "user_email", "")
-            phone = getattr(chat, "user_phone", "")
-            subtype = getattr(chat, "case_subtype", "")
-            response = f"""Procederé a confirmar su cita.
+        if message_lower in ["plan_1", "plan_lanzate", "plan_lánzate_ya"]:
+            return jsonify(get_close_message("Lánzate YA"))
 
-📅 Fecha: Lunes 29 de septiembre - 10:30 a.m.
-📧 Correo de confirmación: {email}
-📱 Teléfono de contacto: {phone}
+        if message_lower in ["plan_3", "plan_vender", "plan_a_vender_se_dijo"]:
+            return jsonify(get_close_message("A Vender Se Dijo"))
 
-He analizado su caso de {subtype}. Le comento que, si el monto supera los 10 millones de pesos, no hay costo inicial: solo se aplica un honoratorio del 10% en caso de éxito.
+        if message_lower in ["plan_5", "plan_negociazo", "plan_que_negociazo"]:
+            return jsonify(get_close_message("Que Negociazo"))
 
-Un abogado laboralista se comunicará con usted a la brevedad. ¿Hay algo más en lo que pueda asistirle?"""
-            return jsonify({"response": response, "end_call": False})
+        if message_lower in ["whatsapp", "hablar_con_asesor", "asesor"]:
+            return jsonify(
+                {
+                    "response": f"¡Perfecto! Te redirijo a nuestro equipo por WhatsApp 👇\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
+                    "options": [
+                        {
+                            "label": "Abrir WhatsApp",
+                            "value": "whatsapp",
+                            "url": f"https://wa.me/573506920726?text=Hola%20Carolina%2C%20quiero%20informaci%C3%B3n",
+                        },
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
 
-        if not hasattr(chat, "appointment_time") and is_reject:
-            response = "Entiendo perfectamente. En ese caso, ¿le gustaría que le pongamos en contacto directamente con uno de nuestros abogados laboralistas? Ellos podrán atender su caso de forma personalizada."
-            return jsonify({"response": response, "end_call": False})
+        if message_lower in ["entendido_quiero_continuar", "continuar"]:
+            return jsonify(get_close_message("tu plan"))
 
-        if not hasattr(chat, "appointment_time") and any(
-            w in message_lower for w in ["miércoles", "miercoles", "tarde"]
+        if message_lower in ["ver_testimonios", "testimonios"]:
+            return jsonify(
+                {
+                    "response": "¡Claro! Tenemos más de 250 proyectos entregados y un 98% de clientes satisfechos 💪. Muchos de ellos empezaron con la misma duda que tú.\n\n¿Qué te gustaría hacer?",
+                    "options": [
+                        {"label": "Quiero empezar", "value": "comparar"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower in [
+            "recibir_info",
+            "info_whatsapp",
+            "recibir_info_por_whatsapp",
+        ]:
+            return jsonify(
+                {
+                    "response": "¡Claro! Te enviamos toda la información por WhatsApp para que la revises tranquilo/a 👇",
+                    "options": [
+                        {
+                            "label": "Enviar info por WhatsApp",
+                            "value": "whatsapp",
+                            "url": f"https://wa.me/573506920726?text=Hola%20Carolina%2C%20env%C3%ADenme%20informaci%C3%B3n%20de%20sus%20planes",
+                        },
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
+
+        if message_lower in ["tengo_otra_pregunta", "otra_pregunta"]:
+            return jsonify(get_welcome_message())
+
+        if any(
+            w in message_lower
+            for w in [
+                "desconfian",
+                "confio",
+                "confío",
+                "estafa",
+                "muy barato",
+                "no confío",
+                "no confio",
+                "parece estafa",
+                "dudo",
+            ]
         ):
-            chat.appointment_time = "Miércoles 1 de Octubre - 3:30 pm"
-            name = getattr(chat, "user_name", "")
-            email = getattr(chat, "user_email", "")
-            phone = getattr(chat, "user_phone", "")
-            subtype = getattr(chat, "case_subtype", "")
-            response = f"""Queda registrada su cita.
+            return jsonify(
+                {
+                    "response": "Es válida tu duda 🙌 Trabajamos bajo pago contra entrega: tú validas el producto y luego pagas. Tenemos más de 250 proyectos entregados y 98% de clientes satisfechos. La idea de Dollar Working es justamente esa: que emprender esté al alcance de todos, sin importar tu presupuesto.",
+                    "options": [
+                        {"label": "Entendido, quiero continuar", "value": "continuar"},
+                        {
+                            "label": "Ver testimonios de clientes",
+                            "value": "testimonios",
+                        },
+                    ],
+                    "end_call": False,
+                }
+            )
 
-📅 Fecha: Miércoles 1 de octubre - 3:30 p.m.
-📧 Correo de confirmación: {email}
-📱 Teléfono de contacto: {phone}
+        if any(
+            w in message_lower
+            for w in [
+                "por que es tan economico",
+                "por qué es tan barato",
+                "porque es tan barato",
+                "tan economico",
+                "tan barato",
+            ]
+        ):
+            return jsonify(
+                {
+                    "response": "Porque creemos que todo emprendedor merece tener presencia digital sin barreras de entrada. Optimizamos nuestros procesos para ofrecerte tecnología de calidad a precios justos, sin sacrificar el soporte ni los resultados.",
+                    "options": [
+                        {"label": "Entendido, quiero continuar", "value": "continuar"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
 
-He revisado su caso de {subtype}. Un abogado laboralista se comunicará con usted en la fecha acordada.
+        if any(
+            w in message_lower
+            for w in [
+                "pensarlo",
+                "lo pienso",
+                "despues",
+                "después",
+                "no estoy seguro",
+                "no estoy segura",
+                "necesito tiempo",
+            ]
+        ):
+            return jsonify(
+                {
+                    "response": "Claro, tómate tu tiempo 😊 Solo recuerda que no hay riesgo: pagas únicamente cuando recibas tu producto y estés conforme. Cuando quieras retomar, aquí estaré.",
+                    "options": [
+                        {"label": "Recibir info por WhatsApp", "value": "recibir_info"},
+                        {"label": "Volver al menú", "value": "menu"},
+                    ],
+                    "end_call": False,
+                }
+            )
 
-¿Hay algo más en lo que pueda asistirle?"""
-            return jsonify({"response": response, "end_call": False})
+        context = f"Usuario en conversación con Carolina sobre Dollar Working."
+        gemini_resp = gemini_response(message, context=context)
+        if gemini_resp:
+            return jsonify(
+                {
+                    "response": gemini_resp,
+                    "options": [{"label": "Volver al menú", "value": "menu"}],
+                    "end_call": False,
+                }
+            )
 
-        if not hasattr(chat, "user_name"):
-            valid, result = validate_name(message)
-            if valid:
-                chat.user_name = result
-                response = f"Mucho gusto, {result}. Para orientarle correctamente, ¿podría indicarme qué tipo de situación laboral está atrayendo? Por ejemplo, despido injustificado, acoso laboral, impago de prestaciones..."
-            else:
-                response = result
-            return jsonify({"response": response, "end_call": False})
-
-        if not hasattr(chat, "case_subtype"):
-            valid, result = validate_subtype(message)
-            if valid:
-                chat.case_subtype = result
-                response = "Comprendo. Le agradecería que me describa brevemente los hechos: fechas, personas involucradas y circunstancias del caso."
-            else:
-                response = result
-            return jsonify({"response": response, "end_call": False})
-
-        if not hasattr(chat, "case_description"):
-            valid, result = validate_description(message)
-            if valid:
-                chat.case_description = result
-                response = f"Agradezco la información, {getattr(chat, 'user_name', '')}. Para proceder con el agendamiento de su cita y enviarle la confirmación, ¿cuál es su correo electrónico?"
-            else:
-                response = result
-            return jsonify({"response": response, "end_call": False})
-
-        if not hasattr(chat, "user_email"):
-            valid, result = validate_email(message)
-            if valid:
-                chat.user_email = result
-                response = "Perfecto. Ahora necesito tu número de celular para poder contactarte."
-            else:
-                response = result
-            return jsonify({"response": response, "end_call": False})
-
-        if not hasattr(chat, "user_phone"):
-            valid, result = validate_phone(message)
-            if valid:
-                chat.user_phone = result
-                response = f"Excelente, {getattr(chat, 'user_name', '')}. Ya cuento con toda la información necesaria. Analizando su caso de {getattr(chat, 'case_subtype', '')}, le recomendaría una cita con uno de nuestros abogados laboralistas. ¿Le viene bien el Lunes 29 de septiembre a las 10:30 a.m.?"
-            else:
-                response = result
-            return jsonify({"response": response, "end_call": False})
-
-        response = "¿Hay algo más en lo que pueda ayudarte?"
-        return jsonify({"response": response, "end_call": False})
+        return jsonify(
+            {
+                "response": "Hmm, no estoy segura de entender. ¿Te gustaría ver nuestros planes o tienes alguna pregunta específica?",
+                "options": [
+                    {"label": "Ver planes", "value": "comparar"},
+                    {"label": "Preguntas frecuentes", "value": "faq"},
+                    {"label": "Volver al menú", "value": "menu"},
+                ],
+                "end_call": False,
+            }
+        )
 
     except Exception as e:
         app.logger.error(f"Exception in chat: {str(e)}")
@@ -492,11 +566,10 @@ def upload_knowledge():
     if not file.filename.endswith(".pdf"):
         return jsonify({"error": "Solo se permiten archivos PDF."}), 400
 
-    # Check file size (max 5MB to prevent OOM on Render free tier)
-    file.seek(0, 2)  # Seek to end
+    file.seek(0, 2)
     file_size = file.tell()
-    file.seek(0)  # Seek back to start
-    max_size = 5 * 1024 * 1024  # 5MB
+    file.seek(0)
+    max_size = 5 * 1024 * 1024
     if file_size > max_size:
         return jsonify(
             {
@@ -505,6 +578,8 @@ def upload_knowledge():
         ), 400
 
     try:
+        import tempfile
+
         tmp_dir = tempfile.mkdtemp()
         tmp_path = os.path.join(tmp_dir, file.filename)
         file.save(tmp_path)
@@ -513,7 +588,6 @@ def upload_knowledge():
         num_chunks, msg = add_pdf(tmp_path)
         app.logger.info(f"Resultado add_pdf: {msg}")
 
-        # Cleanup
         try:
             os.remove(tmp_path)
             os.rmdir(tmp_dir)
@@ -564,93 +638,21 @@ def health_check():
     )
 
 
-@app.route("/api/test-embedding", methods=["GET"])
-def test_embedding():
-    """Test endpoint to check if Gemini embeddings work."""
-    try:
-        import google.generativeai as genai
-
-        api_key = os.environ.get("GEMINI_API_KEY", "")
-        if not api_key:
-            return jsonify({"error": "GEMINI_API_KEY no configurada"}), 500
-        genai.configure(api_key=api_key)
-        result = genai.embed_content(
-            model="models/gemini-embedding-001",
-            content="Test de embedding",
-            output_dimensionality=768,
-        )
-        return jsonify(
-            {
-                "status": "ok",
-                "dimension": len(result["embedding"]),
-                "first_5_values": result["embedding"][:5],
-            }
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/test-search", methods=["POST"])
-def test_search():
-    """Test RAG search directly."""
-    if not RAG_AVAILABLE:
-        return jsonify({"error": "RAG not available"}), 500
-    data = request.json or {}
-    query = data.get("query", "Convención de Viena tratados")
-    try:
-        docs = search_knowledge(query, n_results=3)
-        return jsonify({"query": query, "results": docs, "count": len(docs)})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/pinecone-status", methods=["GET"])
-def pinecone_status():
-    """Check Pinecone index status directly."""
-    if not RAG_AVAILABLE:
-        return jsonify({"error": "RAG not available"}), 500
-    try:
-        from rag import get_pc, get_index, INDEX_NAME, DIMENSION
-
-        pc = get_pc()
-        if pc is None:
-            return jsonify({"error": "Pinecone not connected"}), 500
-
-        existing = pc.list_indexes()
-        index_names = [idx.name for idx in existing.indexes]
-
-        if INDEX_NAME not in index_names:
-            return jsonify(
-                {"status": "no_index", "indexes": index_names, "expected": INDEX_NAME}
-            )
-
-        idx = pc.Index(INDEX_NAME)
-        stats = idx.describe_index_stats()
-
-        return jsonify(
-            {
-                "status": "ok",
-                "index": INDEX_NAME,
-                "dimension": DIMENSION,
-                "total_vectors": stats.total_vector_count,
-                "namespaces": {k: v.vector_count for k, v in stats.namespaces.items()}
-                if stats.namespaces
-                else {},
-            }
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route("/api/voices", methods=["GET"])
 def list_voices():
     voices = [
+        {
+            "id": "es-CO-SalomeNeural",
+            "name": "Salomé",
+            "gender": "Femenina",
+            "region": "Colombia",
+            "recommended": True,
+        },
         {
             "id": "es-US-PalomaNeural",
             "name": "Paloma",
             "gender": "Femenina",
             "region": "Estados Unidos (español)",
-            "recommended": True,
         },
         {
             "id": "es-MX-DaliaNeural",
@@ -659,21 +661,9 @@ def list_voices():
             "region": "México",
         },
         {
-            "id": "es-MX-JorgeNeural",
-            "name": "Jorge",
-            "gender": "Masculino",
-            "region": "México",
-        },
-        {
             "id": "es-ES-ElviraNeural",
             "name": "Elvira",
             "gender": "Femenina",
-            "region": "España",
-        },
-        {
-            "id": "es-ES-AlvaroNeural",
-            "name": "Álvaro",
-            "gender": "Masculino",
             "region": "España",
         },
     ]
