@@ -1220,30 +1220,6 @@ function endCall() {
             }
         }
 
-            if (currentAudio) {
-                try { currentAudio.pause(); currentAudio = null; } catch(e) {}
-            }
-
-            if ('speechSynthesis' in window) speechSynthesis.cancel();
-
-            const callView = document.getElementById('callView');
-            callView.classList.remove('calling');
-            document.getElementById('buttonLabel').textContent = 'Llamar';
-            document.getElementById('startCallBtn').style.background = '#28a745';
-            document.getElementById('callModeBtn').style.background = '#306eff';
-            document.getElementById('callModeBtn').style.color = '#ffffff';
-            
-
-            if (currentMode === 'call') {
-                document.getElementById('statusIndicator').textContent = 'Llamada finalizada';
-                setTimeout(() => {
-                    if (!isCalling && currentMode === 'call') {
-                        document.getElementById('statusIndicator').textContent = 'Listo para hablar';
-                    }
-                }, 3000);
-            }
-        }
-
         function sendCallMessage(message) {
             document.getElementById('statusIndicator').innerHTML = "Procesando<span class='typing-dots'><span></span><span></span><span></span></span>";
 
