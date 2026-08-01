@@ -41,13 +41,16 @@
             overscroll-behavior: contain;
         }
 
-        .header {
-            flex-shrink: 0;
+.header {
             background: #306eff;
-            border-bottom: 2px solid #ffffff;
-            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 3px solid #ffffff;
             position: relative;
-            z-index: 10;
+            height: 150px;
+            flex-shrink: 0;
         }
 
         .header-logo {
