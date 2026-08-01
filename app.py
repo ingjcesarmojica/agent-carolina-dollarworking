@@ -187,20 +187,176 @@ def get_ask_phone(name, email):
     }
 
 
-def get_services_presentation(name, email, phone):
+def get_discovery_web(name):
     return {
-        "response": f"Excelente, {name}! Ya tengo tus datos.\n\nEn Dollar Working ofrecemos:\n1. Paginas Web profesionales\n2. Tiendas Online con pasarela de pagos\n3. Chatbots con IA\n4. Agentes de IA para automatizar tu negocio\n5. IA-Records para potenciar tu marca\n\nTodos nuestros planes incluyen hosting, SSL y soporte 24/7.\n\nQue servicio te interesa mas?",
-        "flow": "service_interest",
+        "response": f"Excelente, {name}! Me gustaria saber si ya cuentas con una pagina web de tu negocio.",
+        "flow": "discovery_web",
         "options": [
-            {"label": "Pagina Web", "value": "interest_pagina_web"},
-            {"label": "Tienda Online", "value": "interest_tienda_online"},
-            {"label": "Chatbot con IA", "value": "interest_chatbot"},
-            {"label": "Agente de IA", "value": "interest_agente_ia"},
-            {"label": "Todos los servicios", "value": "interest_todos"},
-            {
-                "label": "No estoy seguro, muestrame los planes",
-                "value": "interest_no_se",
-            },
+            {"label": "Si, ya tengo pagina web", "value": "has_web_yes"},
+            {"label": "No, no tengo", "value": "has_web_no"},
+        ],
+        "end_call": False,
+    }
+
+
+def get_discovery_store(name, has_web):
+    if has_web:
+        return {
+            "response": f"Excelente, {name}! Cuanteme, esa pagina web tiene tienda en linea?",
+            "flow": "discovery_store",
+            "options": [
+                {"label": "Si, ya tengo tienda", "value": "has_store_yes"},
+                {"label": "No, no tengo", "value": "has_store_no"},
+            ],
+            "end_call": False,
+        }
+    else:
+        return {
+            "response": f"Perfecto, {name}. Cuanteme, necesitas una tienda en linea para vender tus productos?",
+            "flow": "discovery_store",
+            "options": [
+                {"label": "Si, me interesa", "value": "needs_store_yes"},
+                {"label": "No, solo necesito otra cosa", "value": "needs_store_no"},
+            ],
+            "end_call": False,
+        }
+
+
+def get_discovery_chatbot(name, has_store):
+    if has_store:
+        return {
+            "response": f"Muy bien, {name}. Esa tienda tiene algun chatbot que responda a tus clientes automaticamente?",
+            "flow": "discovery_chatbot",
+            "options": [
+                {"label": "Si, ya tengo chatbot", "value": "has_chatbot_yes"},
+                {"label": "No, no tengo", "value": "has_chatbot_no"},
+            ],
+            "end_call": False,
+        }
+    else:
+        return {
+            "response": f"Entendido, {name}. Necesitas un chatbot que responda a tus clientes 24/7?",
+            "flow": "discovery_chatbot",
+            "options": [
+                {"label": "Si, me interesa", "value": "needs_chatbot_yes"},
+                {"label": "No, no necesito", "value": "needs_chatbot_no"},
+            ],
+            "end_call": False,
+        }
+
+
+def get_discovery_agent(name, has_chatbot):
+    if has_chatbot:
+        return {
+            "response": f"Genial, {name}. Ese chatbot es inteligente o solo responde preguntas basicas? Tiene algun agente de IA que automatice tareas?",
+            "flow": "discovery_agent",
+            "options": [
+                {"label": "Si, tiene IA completa", "value": "has_agent_yes"},
+                {"label": "No, es basico", "value": "has_agent_no"},
+            ],
+            "end_call": False,
+        }
+    else:
+        return {
+            "response": f"{name}, te gustaria tener un agente de IA que automatice tareas y aprenda de tu negocio?",
+            "flow": "discovery_agent",
+            "options": [
+                {"label": "Si, me interesa", "value": "needs_agent_yes"},
+                {"label": "No, no necesito", "value": "needs_agent_no"},
+            ],
+            "end_call": False,
+        }
+
+
+def get_discovery_ia_records(name, has_agent):
+    if has_agent:
+        return {
+            "response": f"Excelente, {name}. Ya conoces IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
+            "flow": "discovery_ia_records",
+            "options": [
+                {"label": "Si, ya tengo IA-Records", "value": "has_ia_records_yes"},
+                {"label": "No, no lo conozco", "value": "has_ia_records_no"},
+            ],
+            "end_call": False,
+        }
+    else:
+        return {
+            "response": f"{name}, te gustaria tener IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
+            "flow": "discovery_ia_records",
+            "options": [
+                {"label": "Si, me interesa", "value": "needs_ia_records_yes"},
+                {"label": "No, no necesito", "value": "needs_ia_records_no"},
+            ],
+            "end_call": False,
+        }
+
+
+def get_discovery_summary(
+    name, has_web, has_store, has_chatbot, has_agent, has_ia_records
+):
+    services_has = []
+    services_needs = []
+
+    if has_web:
+        services_has.append("Pagina Web")
+    else:
+        services_needs.append("Pagina Web")
+
+    if has_store:
+        services_has.append("Tienda Online")
+    else:
+        services_needs.append("Tienda Online")
+
+    if has_chatbot:
+        services_has.append("Chatbot con IA")
+    else:
+        services_needs.append("Chatbot con IA")
+
+    if has_agent:
+        services_needs.append("Agente de IA mejorado")
+    else:
+        services_needs.append("Agente de IA")
+
+    if has_ia_records:
+        services_has.append("IA-Records")
+    else:
+        services_needs.append("IA-Records")
+
+    response_parts = []
+    if services_has:
+        response_parts.append(f"Lo que ya tienes: {', '.join(services_has)}.")
+    if services_needs:
+        response_parts.append(
+            f"Lo que te podemos mejorar o agregar: {', '.join(services_needs)}."
+        )
+
+    if len(services_needs) == 5:
+        plan = "Que Negociazo"
+        price = "5 USD / $15.869 COP"
+        desc = "nuestro paquete completo con todo: web, tienda, chatbot con IA, agente de IA e IA-Records"
+    elif "Pagina Web" in services_needs and "Tienda Online" in services_needs:
+        plan = "A Vender Se Dijo"
+        price = "3 USD / $9.521 COP"
+        desc = "tu pagina web + tienda online con pasarela de pagos"
+    elif "Pagina Web" in services_needs:
+        plan = "LanZaTE YA"
+        price = "1 USD / $3.205 COP"
+        desc = "tu pagina web profesional con diseno responsive"
+    else:
+        plan = "Que Negociazo"
+        price = "5 USD / $15.869 COP"
+        desc = "mejorar y complementar lo que ya tienes con tecnologia de punta"
+
+    summary_text = "\n".join(response_parts)
+
+    return {
+        "response": f"{name}, esto es lo que encontre:\n\n{summary_text}\n\nTe recomiendo el Plan {plan} ({price}). Con este plan obtienes {desc}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme.\n\nQuieres avanzar con este plan?",
+        "flow": "confirm_plan",
+        "plan": plan,
+        "options": [
+            {"label": "Si, quiero este plan", "value": "advance"},
+            {"label": "Ver otro plan", "value": "comparar"},
+            {"label": "Tengo dudas", "value": "have_doubts"},
         ],
         "end_call": False,
     }
@@ -445,8 +601,50 @@ def chat():
                         "end_call": False,
                     }
                 )
+            return jsonify(get_discovery_web(name))
+
+        if flow == "discovery_web":
+            has_web = message_lower == "has_web_yes"
+            user_data["has_web"] = has_web
+            return jsonify(get_discovery_store(name, has_web))
+
+        if flow == "discovery_store":
+            has_store = (
+                message_lower == "has_store_yes" or message_lower == "needs_store_yes"
+            )
+            user_data["has_store"] = has_store
+            return jsonify(get_discovery_chatbot(name, has_store))
+
+        if flow == "discovery_chatbot":
+            has_chatbot = (
+                message_lower == "has_chatbot_yes"
+                or message_lower == "needs_chatbot_yes"
+            )
+            user_data["has_chatbot"] = has_chatbot
+            return jsonify(get_discovery_agent(name, has_chatbot))
+
+        if flow == "discovery_agent":
+            has_agent = (
+                message_lower == "has_agent_yes" or message_lower == "needs_agent_yes"
+            )
+            user_data["has_agent"] = has_agent
+            return jsonify(get_discovery_ia_records(name, has_agent))
+
+        if flow == "discovery_ia_records":
+            has_ia_records = (
+                message_lower == "has_ia_records_yes"
+                or message_lower == "needs_ia_records_yes"
+            )
+            user_data["has_ia_records"] = has_ia_records
             return jsonify(
-                get_services_presentation(name, user_data.get("email", ""), phone)
+                get_discovery_summary(
+                    name,
+                    user_data.get("has_web", False),
+                    user_data.get("has_store", False),
+                    user_data.get("has_chatbot", False),
+                    user_data.get("has_agent", False),
+                    has_ia_records,
+                )
             )
 
         if flow == "service_interest":
