@@ -103,25 +103,29 @@ SYSTEM_PROMPT = """Eres Carolina, la asesora virtual de Dollar Working.
 - Eres cercana, entusiasta, resolutiva y colombiana.
 - Hablas como una asesora comercial que quiere ayudar a emprender, no como un robot corporativo.
 - Usas un tono motivador orientado a emprendedores.
-- Expresiones naturales: "Hola!", "Perfecto", "Excelente decision", "Tranquilo/a, para eso estoy", "Genial!"
+- Expresiones naturales: Hola, Perfecto, Excelente decision, Tranquilo para eso estoy, Genial
 
 ## Reglas
-- Responde en maximo 2-3 oraciones.
+- Responde en maximo dos a tres oraciones.
 - Sigues un flujo conversacional estructurado con opciones.
 - SIEMPRE ofreces opciones claras al usuario.
-- Cuando el usuario elige un plan, lo diriges al cierre (WhatsApp).
+- Cuando el usuario elige un plan, lo diriges al cierre por WhatsApp.
 - Manejas objeciones con empatia y argumentos de pago contra entrega.
 - NO uses emojis en tus respuestas, solo texto plano para que el TTS funcione bien.
-- Evitas tecnicismos; le hablas a emprendedores sin conocimientos tecnicos.
-- NO modificas montos, nombres de planes ni numero de contacto.
+- Evitas tecnicismos le hablas a emprendedores sin conocimientos tecnicos.
+- NO modificas montos nombres de planes ni numero de contacto.
+- NO uses signos de exclamacion ni interrogation.
+- NO uses barras diagonales ni slashes.
+- NO uses numeros escribe todo en letras por ejemplo uno tres cinco dolares.
+- NO uses comas ni puntos y comas al final de las frases.
 
 ## Planes
-- Plan LanZaTE YA: 1 USD / $3.205 COP - Pagina web
-- Plan A Vender Se Dijo: 3 USD / $9.521 COP - Pagina web + tienda online
-- Plan Que Negociazo: 5 USD / $15.869 COP - Web + tienda + chatbot + agente de IA + IA-Records
+- Plan LanZaTE YA un dolar Pagina web
+- Plan A Vender Se Dijo tres dolares Pagina web y tienda online
+- Plan Que Negociazo cinco dolares Web tienda chatbot agente de IA e IA Records
 
 ## WhatsApp
-Numero: +57 350 692 0726"""
+Numero cincuenta y siete tres cincuenta seiscientos noventa y dos cero siete dos seis"""
 
 
 def gemini_response(user_message, context=""):
@@ -174,7 +178,7 @@ def get_welcome_message():
 
 def get_ask_email(name):
     return {
-        "response": f"Mucho gusto, {name}. Para poder enviarte informacion personalizada, cual es tu correo electronico?",
+        "response": f"Mucho gusto {name}. Para poder enviarte informacion personalizada cual es tu correo electronico",
         "flow": "ask_email",
         "options": [],
         "end_call": False,
@@ -183,7 +187,7 @@ def get_ask_email(name):
 
 def get_ask_phone(name, email):
     return {
-        "response": "Perfecto. Un ultimo dato: cual es tu numero de WhatsApp? Asi nuestro equipo puede contactarte directamente.",
+        "response": "Perfecto. Un ultimo dato cual es tu numero de WhatsApp. Asi nuestro equipo puede contactarte directamente",
         "flow": "ask_phone",
         "options": [],
         "end_call": False,
@@ -192,11 +196,11 @@ def get_ask_phone(name, email):
 
 def get_discovery_web(name):
     return {
-        "response": "Excelente! Me gustaria saber si ya cuentas con una pagina web de tu negocio.",
+        "response": "Excelente. Me gustaria saber si ya cuentas con una pagina web de tu negocio",
         "flow": "discovery_web",
         "options": [
-            {"label": "Si, ya tengo pagina web", "value": "has_web_yes"},
-            {"label": "No, no tengo", "value": "has_web_no"},
+            {"label": "Si ya tengo pagina web", "value": "has_web_yes"},
+            {"label": "No no tengo", "value": "has_web_no"},
         ],
         "end_call": False,
     }
@@ -205,17 +209,17 @@ def get_discovery_web(name):
 def get_discovery_store(name, has_web):
     if has_web:
         return {
-            "response": "Excelente! Cuanteme, esa pagina web tiene tienda en linea?",
+            "response": "Excelente. Cuanteme esa pagina web tiene tienda en linea",
             "flow": "discovery_store",
             "options": [
-                {"label": "Si, ya tengo tienda", "value": "has_store_yes"},
-                {"label": "No, no tengo", "value": "has_store_no"},
+                {"label": "Si ya tengo tienda", "value": "has_store_yes"},
+                {"label": "No no tengo", "value": "has_store_no"},
             ],
             "end_call": False,
         }
     else:
         return {
-            "response": "Perfecto. Cuanteme, necesitas una tienda en linea para vender tus productos?",
+            "response": "Perfecto. Cuanteme necesitas una tienda en linea para vender tus productos",
             "flow": "discovery_store",
             "options": [
                 {"label": "Si, me interesa", "value": "needs_store_yes"},
@@ -228,21 +232,21 @@ def get_discovery_store(name, has_web):
 def get_discovery_chatbot(name, has_store):
     if has_store:
         return {
-            "response": "Muy bien. Esa tienda tiene algun chatbot que responda a tus clientes automaticamente?",
+            "response": "Muy bien. Esa tienda tiene algun chatbot que responda a tus clientes automaticamente",
             "flow": "discovery_chatbot",
             "options": [
-                {"label": "Si, ya tengo chatbot", "value": "has_chatbot_yes"},
-                {"label": "No, no tengo", "value": "has_chatbot_no"},
+                {"label": "Si ya tengo chatbot", "value": "has_chatbot_yes"},
+                {"label": "No no tengo", "value": "has_chatbot_no"},
             ],
             "end_call": False,
         }
     else:
         return {
-            "response": "Entendido. Necesitas un chatbot que responda a tus clientes 24/7?",
+            "response": "Entendido. Necesitas un chatbot que responda a tus clientes todo el dia",
             "flow": "discovery_chatbot",
             "options": [
-                {"label": "Si, me interesa", "value": "needs_chatbot_yes"},
-                {"label": "No, no necesito", "value": "needs_chatbot_no"},
+                {"label": "Si me interesa", "value": "needs_chatbot_yes"},
+                {"label": "No no necesito", "value": "needs_chatbot_no"},
             ],
             "end_call": False,
         }
@@ -251,21 +255,21 @@ def get_discovery_chatbot(name, has_store):
 def get_discovery_agent(name, has_chatbot):
     if has_chatbot:
         return {
-            "response": "Genial. Ese chatbot es inteligente o solo responde preguntas basicas? Tiene algun agente de IA que automatice tareas?",
+            "response": "Genial. Ese chatbot es inteligente o solo responde preguntas basicas. Tiene algun agente de IA que automatice tareas",
             "flow": "discovery_agent",
             "options": [
-                {"label": "Si, tiene IA completa", "value": "has_agent_yes"},
-                {"label": "No, es basico", "value": "has_agent_no"},
+                {"label": "Si tiene IA completa", "value": "has_agent_yes"},
+                {"label": "No es basico", "value": "has_agent_no"},
             ],
             "end_call": False,
         }
     else:
         return {
-            "response": "Te gustaria tener un agente de IA que automatice tareas y aprenda de tu negocio?",
+            "response": "Te gustaria tener un agente de IA que automatice tareas y aprenda de tu negocio",
             "flow": "discovery_agent",
             "options": [
-                {"label": "Si, me interesa", "value": "needs_agent_yes"},
-                {"label": "No, no necesito", "value": "needs_agent_no"},
+                {"label": "Si me interesa", "value": "needs_agent_yes"},
+                {"label": "No no necesito", "value": "needs_agent_no"},
             ],
             "end_call": False,
         }
@@ -274,21 +278,21 @@ def get_discovery_agent(name, has_chatbot):
 def get_discovery_ia_records(name, has_agent):
     if has_agent:
         return {
-            "response": "Excelente. Ya conoces IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
+            "response": "Excelente. Ya conoces IA Records. Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido",
             "flow": "discovery_ia_records",
             "options": [
-                {"label": "Si, ya tengo IA-Records", "value": "has_ia_records_yes"},
-                {"label": "No, no lo conozco", "value": "has_ia_records_no"},
+                {"label": "Si ya tengo IA Records", "value": "has_ia_records_yes"},
+                {"label": "No no lo conozco", "value": "has_ia_records_no"},
             ],
             "end_call": False,
         }
     else:
         return {
-            "response": "Te gustaria tener IA-Records? Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido.",
+            "response": "Te gustaria tener IA Records. Es una ficha de presentacion potenciada con IA para que tus clientes te conozcan y confien mas rapido",
             "flow": "discovery_ia_records",
             "options": [
-                {"label": "Si, me interesa", "value": "needs_ia_records_yes"},
-                {"label": "No, no necesito", "value": "needs_ia_records_no"},
+                {"label": "Si me interesa", "value": "needs_ia_records_yes"},
+                {"label": "No no necesito", "value": "needs_ia_records_no"},
             ],
             "end_call": False,
         }
@@ -327,37 +331,37 @@ def get_discovery_summary(
 
     response_parts = []
     if services_has:
-        response_parts.append(f"Lo que ya tienes: {', '.join(services_has)}.")
+        response_parts.append(f"Lo que ya tienes {', '.join(services_has)}")
     if services_needs:
         response_parts.append(
-            f"Lo que te podemos mejorar o agregar: {', '.join(services_needs)}."
+            f"Lo que te podemos mejorar o agregar {', '.join(services_needs)}"
         )
 
     if len(services_needs) == 5:
         plan = "Que Negociazo"
-        price = "5 USD / $15.869 COP"
-        desc = "nuestro paquete completo con todo: web, tienda, chatbot con IA, agente de IA e IA-Records"
+        price = "cinco dolares"
+        desc = "nuestro paquete completo con todo web tienda chatbot con IA agente de IA e IA Records"
     elif "Pagina Web" in services_needs and "Tienda Online" in services_needs:
         plan = "A Vender Se Dijo"
-        price = "3 USD / $9.521 COP"
-        desc = "tu pagina web + tienda online con pasarela de pagos"
+        price = "tres dolares"
+        desc = "tu pagina web y tienda online con pasarela de pagos"
     elif "Pagina Web" in services_needs:
         plan = "LanZaTE YA"
-        price = "1 USD / $3.205 COP"
+        price = "un dolar"
         desc = "tu pagina web profesional con diseno responsive"
     else:
         plan = "Que Negociazo"
-        price = "5 USD / $15.869 COP"
+        price = "cinco dolares"
         desc = "mejorar y complementar lo que ya tienes con tecnologia de punta"
 
     summary_text = "\n".join(response_parts)
 
     return {
-        "response": f"Esto es lo que encontre:\n\n{summary_text}\n\nTe recomiendo el Plan {plan} ({price}). Con este plan obtienes {desc}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme.\n\nQuieres avanzar con este plan?",
+        "response": f"Esto es lo que encontre\n\n{summary_text}\n\nTe recomiendo el Plan {plan} {price}. Con este plan obtienes {desc}.\n\nLo mejor no pagas nada hasta recibir tu producto y estar conforme.\n\nQuieres avanzar con este plan",
         "flow": "confirm_plan",
         "plan": plan,
         "options": [
-            {"label": "Si, quiero este plan", "value": "advance"},
+            {"label": "Si quiero este plan", "value": "advance"},
             {"label": "Ver otro plan", "value": "comparar"},
             {"label": "Tengo dudas", "value": "have_doubts"},
         ],
@@ -367,12 +371,12 @@ def get_discovery_summary(
 
 def get_plan_comparator():
     return {
-        "response": "Tenemos 3 planes increibles, todos con la promesa de pagar solo cuando recibas tus productos y estes conforme:\n\n1 dolar, Plan LanZaTE YA: tu pagina web profesional.\n3 dolares, Plan A Vender Se Dijo: pagina web + tienda online.\n5 dolares, Plan Que Negociazo: web + tienda + chatbot + agente de IA + IA-Records.\n\nCual se ajusta mas a lo que necesitas?",
+        "response": "Tenemos tres planes increibles todos con la promesa de pagar solo cuando recibas tus productos y estes conforme\n\nUn dolar Plan LanZaTE YA tu pagina web profesional\nTres dolares Plan A Vender Se Dijo pagina web y tienda online\nCinco dolares Plan Que Negociazo web tienda chatbot agente de IA e IA Records\n\nCual se ajusta mas a lo que necesitas",
         "flow": "choose_plan",
         "options": [
-            {"label": "$1 USD - LanZaTE YA", "value": "plan_1"},
-            {"label": "$3 USD - A Vender Se Dijo", "value": "plan_3"},
-            {"label": "$5 USD - Que Negociazo", "value": "plan_5"},
+            {"label": "Un dolar LanZaTE YA", "value": "plan_1"},
+            {"label": "Tres dolares A Vender Se Dijo", "value": "plan_3"},
+            {"label": "Cinco dolares Que Negociazo", "value": "plan_5"},
             {"label": "Necesito mas informacion", "value": "need_more_info"},
         ],
         "end_call": False,
@@ -383,32 +387,32 @@ def get_recommend_plan(interest, name):
     recommendations = {
         "interest_pagina_web": {
             "plan": "LanZaTE YA",
-            "price": "1 USD / $3.205 COP",
-            "desc": "una pagina web profesional con diseno responsive, hosting por 1 ano y certificado SSL",
+            "price": "un dolar",
+            "desc": "una pagina web profesional con diseno responsive hosting por un ano y certificado SSL",
         },
         "interest_tienda_online": {
             "plan": "A Vender Se Dijo",
-            "price": "3 USD / $9.521 COP",
-            "desc": "tu pagina web + tienda online con pasarela de pagos para vender desde el dia uno",
+            "price": "tres dolares",
+            "desc": "tu pagina web y tienda online con pasarela de pagos para vender desde el dia uno",
         },
         "interest_chatbot": {
             "plan": "Que Negociazo",
-            "price": "5 USD / $15.869 COP",
-            "desc": "todo incluido: web, tienda, chatbot con IA, agente de IA e IA-Records",
+            "price": "cinco dolares",
+            "desc": "todo incluido web tienda chatbot con IA agente de IA e IA Records",
         },
         "interest_agente_ia": {
             "plan": "Que Negociazo",
-            "price": "5 USD / $15.869 COP",
-            "desc": "todo incluido: web, tienda, chatbot con IA, agente de IA e IA-Records",
+            "price": "cinco dolares",
+            "desc": "todo incluido web tienda chatbot con IA agente de IA e IA Records",
         },
         "interest_todos": {
             "plan": "Que Negociazo",
-            "price": "5 USD / $15.869 COP",
-            "desc": "nuestro paquete completo con todos los servicios: web, tienda, chatbot, agente de IA e IA-Records",
+            "price": "cinco dolares",
+            "desc": "nuestro paquete completo con todos los servicios web tienda chatbot agente de IA e IA Records",
         },
         "interest_no_se": {
             "plan": "Que Negociazo",
-            "price": "5 USD / $15.869 COP",
+            "price": "cinco dolares",
             "desc": "todos nuestros servicios incluidos",
         },
     }
@@ -416,11 +420,11 @@ def get_recommend_plan(interest, name):
     rec = recommendations.get(interest, recommendations["interest_todos"])
 
     return {
-        "response": f"Basado en lo que me cuentas, te recomiendo el Plan {rec['plan']} ({rec['price']}).\n\nCon este plan obtienes {rec['desc']}.\n\nLo mejor: no pagas nada hasta recibir tu producto y estar conforme. Sin riesgos.\n\nQuieres avanzar con este plan?",
+        "response": f"Basado en lo que me cuentas te recomiendo el Plan {rec['plan']} {rec['price']}.\n\nCon este plan obtienes {rec['desc']}.\n\nLo mejor no pagas nada hasta recibir tu producto y estar conforme sin riesgos.\n\nQuieres avanzar con este plan",
         "flow": "confirm_plan",
         "plan": rec["plan"],
         "options": [
-            {"label": "Si, quiero este plan", "value": f"confirm_{interest}"},
+            {"label": "Si quiero este plan", "value": f"confirm_{interest}"},
             {"label": "Ver otro plan", "value": "comparar"},
             {"label": "Tengo dudas", "value": "have_doubts"},
         ],
@@ -430,7 +434,7 @@ def get_recommend_plan(interest, name):
 
 def get_close_message(plan_name, name):
     return {
-        "response": f"Excelente decision! El Plan {plan_name} es perfecto para arrancar tu negocio digital.\n\nNuestro equipo se pondra en contacto contigo por WhatsApp para coordinar los detalles y comenzar tu proyecto.\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
+        "response": f"Excelente decision. El Plan {plan_name} es perfecto para arrancar tu negocio digital.\n\nNuestro equipo se pondra en contacto contigo por WhatsApp para coordinar los detalles y comenzar tu proyecto.\n\nRecuerda no pagas nada hasta recibir tu producto y estar conforme",
         "flow": "conversion",
         "options": [
             {
@@ -446,13 +450,13 @@ def get_close_message(plan_name, name):
 
 def get_faq_menu():
     return {
-        "response": "Estas son las preguntas mas frecuentes de nuestros clientes:",
+        "response": "Estas son las preguntas mas frecuentes de nuestros clientes",
         "flow": "faq",
         "options": [
-            {"label": "Cuanto se demoran?", "value": "faq_demora"},
-            {"label": "Tienen soporte?", "value": "faq_soporte"},
-            {"label": "Hacen apps moviles?", "value": "faq_apps"},
-            {"label": "Como pago?", "value": "faq_pago"},
+            {"label": "Cuanto se demoran", "value": "faq_demora"},
+            {"label": "Tienen soporte", "value": "faq_soporte"},
+            {"label": "Hacen apps moviles", "value": "faq_apps"},
+            {"label": "Como pago", "value": "faq_pago"},
             {"label": "Horario de atencion", "value": "faq_horario"},
         ],
         "end_call": False,
@@ -462,27 +466,27 @@ def get_faq_menu():
 def get_faq_answer(option):
     faqs = {
         "faq_demora": {
-            "response": "Depende del plan, pero nuestro equipo te da un tiempo estimado apenas conversemos por WhatsApp.",
+            "response": "Depende del plan pero nuestro equipo te da un tiempo estimado apenas conversemos por WhatsApp",
             "flow": "faq",
             "options": [{"label": "Volver al menu", "value": "menu"}],
         },
         "faq_soporte": {
-            "response": "Si, soporte tecnico 24/7 y mantenimiento continuo incluido en todos los planes.",
+            "response": "Si soporte tecnico todo el dia y mantenimiento continuo incluido en todos los planes",
             "flow": "faq",
             "options": [{"label": "Volver al menu", "value": "menu"}],
         },
         "faq_apps": {
-            "response": "Si, hacemos apps para iOS y Android con UI/UX profesional. Incluido en el Plan Que Negociazo.",
+            "response": "Si hacemos apps para iOS y Android con interfaz profesional. Incluido en el Plan Que Negociazo",
             "flow": "faq",
             "options": [{"label": "Volver al menu", "value": "menu"}],
         },
         "faq_pago": {
-            "response": "Solo pagas cuando recibas tu producto y quedes conforme. Sin anticipos, sin sorpresas.",
+            "response": "Solo pagas cuando recibas tu producto y quedes conforme. Sin anticipos sin sorpresas",
             "flow": "faq",
             "options": [{"label": "Volver al menu", "value": "menu"}],
         },
         "faq_horario": {
-            "response": "Lunes a viernes 9am-6pm, sabados 10am-2pm, domingo cerrado.",
+            "response": "Lunes a viernes de nueve a seis de la manana sabados de diez a dos del mediodia domingo cerrado",
             "flow": "faq",
             "options": [{"label": "Volver al menu", "value": "menu"}],
         },
@@ -490,7 +494,7 @@ def get_faq_answer(option):
     return faqs.get(
         option,
         {
-            "response": "Hay algo mas en lo que pueda ayudarte?",
+            "response": "Hay algo mas en lo que pueda ayudarte",
             "flow": "faq",
             "options": [{"label": "Volver al menu", "value": "menu"}],
             "end_call": False,
@@ -500,7 +504,7 @@ def get_faq_answer(option):
 
 def get_farewell(name):
     return {
-        "response": "Fue un gusto ayudarte! Si tienes otra pregunta, aqui estare. Y si ya quieres dar el paso, escribenos por WhatsApp y arrancamos tu negocio digital hoy mismo.",
+        "response": "Fue un gusto ayudarte. Si tienes otra pregunta aqui estare. Y si ya quieres dar el paso escribenos por WhatsApp y arrancamos tu negocio digital hoy mismo",
         "flow": "end",
         "options": [],
         "end_call": True,
@@ -574,7 +578,7 @@ def chat():
             if flow == "" or flow == "ask_name":
                 return jsonify(
                     {
-                        "response": f"Hola {name}, soy Carolina. Continuamos con la conversacion. En que puedo ayudarte?",
+                        "response": f"Hola {name} soy Carolina. Continuamos con la conversacion. En que puedo ayudarte",
                         "flow": flow,
                         "options": [],
                         "end_call": False,
@@ -583,7 +587,7 @@ def chat():
             else:
                 return jsonify(
                     {
-                        "response": f"Hola {name}, retomamos donde quedamos. En que puedo ayudarte?",
+                        "response": f"Hola {name} retomamos donde quedamos. En que puedo ayudarte",
                         "flow": flow,
                         "options": [],
                         "end_call": False,
@@ -680,12 +684,15 @@ def chat():
             if message_lower == "need_more_info":
                 return jsonify(
                     {
-                        "response": "Todos nuestros planes incluyen hosting, SSL, soporte 24/7 y pago contra entrega.\n\nElige el que mas se ajuste a tu negocio:",
+                        "response": "Todos nuestros planes incluyen hosting SSL soporte todo el dia y pago contra entrega.\n\nElige el que mas se ajuste a tu negocio",
                         "flow": "choose_plan",
                         "options": [
-                            {"label": "$1 USD - LanZaTE YA", "value": "plan_1"},
-                            {"label": "$3 USD - A Vender Se Dijo", "value": "plan_3"},
-                            {"label": "$5 USD - Que Negociazo", "value": "plan_5"},
+                            {"label": "Un dolar LanZaTE YA", "value": "plan_1"},
+                            {
+                                "label": "Tres dolares A Vender Se Dijo",
+                                "value": "plan_3",
+                            },
+                            {"label": "Cinco dolares Que Negociazo", "value": "plan_5"},
                         ],
                         "end_call": False,
                     }
@@ -695,10 +702,10 @@ def chat():
             if message_lower == "have_doubts":
                 return jsonify(
                     {
-                        "response": "Tranquilo, es normal tener dudas. Recuerda que no pagas nada hasta recibir tu producto y estar conforme. No hay riesgo.\n\nQue duda tienes?",
+                        "response": "Tranquilo es normal tener dudas. Recuerda que no pagas nada hasta recibir tu producto y estar conforme. No hay riesgo.\n\nQue duda tienes",
                         "flow": "confirm_plan",
                         "options": [
-                            {"label": "Es muy barato, desconfio", "value": "distrust"},
+                            {"label": "Es muy barato desconfio", "value": "distrust"},
                             {"label": "Necesito pensarlo", "value": "think_about"},
                             {"label": "Quiero ver otros planes", "value": "comparar"},
                             {"label": "Quiero avanzar", "value": "advance"},
@@ -728,10 +735,10 @@ def chat():
         ]:
             return jsonify(
                 {
-                    "response": "Es valida tu duda. Trabajamos bajo pago contra entrega: tu validas el producto y luego pagas. Tenemos mas de 250 proyectos entregados y 98% de clientes satisfechos. Dollar Working existe para que emprender este al alcance de todos.",
+                    "response": "Es valida tu duda. Trabajamos bajo pago contra entrega tu validas el producto y luego pagas. Tenemos mas de doscientos cincuenta proyectos entregados y noventa y ocho por ciento de clientes satisfechos. Dollar Working existe para que emprender este al alcance de todos",
                     "flow": "confirm_plan",
                     "options": [
-                        {"label": "Entendido, quiero avanzar", "value": "advance"},
+                        {"label": "Entendido quiero avanzar", "value": "advance"},
                         {"label": "Ver testimonios", "value": "testimonios"},
                         {"label": "Tengo otra duda", "value": "have_doubts"},
                     ],
@@ -748,7 +755,7 @@ def chat():
         ]:
             return jsonify(
                 {
-                    "response": "No hay presion. Solo recuerda que no hay riesgo: pagas unicamente cuando recibas tu producto y estes conforme. Cuando quieras retomar, aqui estare.",
+                    "response": "No hay presion. Solo recuerda que no hay riesgo pagas unicamente cuando recibas tu producto y estes conforme. Cuando quieras retomar aqui estare",
                     "flow": "confirm_plan",
                     "options": [
                         {"label": "Recibir info por WhatsApp", "value": "recibir_info"},
@@ -762,7 +769,7 @@ def chat():
         if message_lower == "testimonios":
             return jsonify(
                 {
-                    "response": "Tenemos mas de 250 proyectos entregados y un 98% de clientes satisfechos. Muchos empezaron con la misma duda que tu.\n\nQue te gustaria hacer?",
+                    "response": "Tenemos mas de doscientos cincuenta proyectos entregados y un noventa y ocho por ciento de clientes satisfechos. Muchos empezaron con la misma duda que tu.\n\nQue te gustaria hacer",
                     "flow": "confirm_plan",
                     "options": [
                         {"label": "Quiero avanzar", "value": "advance"},
@@ -775,7 +782,7 @@ def chat():
         if message_lower in ["recibir_info", "info_whatsapp"]:
             return jsonify(
                 {
-                    "response": "Claro! Te enviamos toda la informacion por WhatsApp para que la revises tranquilo.",
+                    "response": "Claro. Te enviamos toda la informacion por WhatsApp para que la revises tranquilo",
                     "flow": "conversion",
                     "options": [
                         {
@@ -792,7 +799,7 @@ def chat():
         if message_lower in ["whatsapp", "hablar_con_asesor", "asesor"]:
             return jsonify(
                 {
-                    "response": f"Perfecto! Te redirijo a nuestro equipo por WhatsApp.\n\nRecuerda: no pagas nada hasta recibir tu producto y estar conforme.",
+                    "response": f"Perfecto. Te redirijo a nuestro equipo por WhatsApp.\n\nRecuerda no pagas nada hasta recibir tu producto y estar conforme",
                     "flow": "conversion",
                     "options": [
                         {
@@ -809,7 +816,7 @@ def chat():
         if message_lower in ["pagina_web"]:
             return jsonify(
                 {
-                    "response": "Con el Plan LanZaTE YA (1 USD / $3.205 COP) te entregamos tu pagina web con diseno responsive, hosting por 1 ano y certificado SSL.",
+                    "response": "Con el Plan LanZaTE YA un dolar te entregamos tu pagina web con diseno responsive hosting por un ano y certificado SSL",
                     "flow": "choose_plan",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_1"},
@@ -823,7 +830,7 @@ def chat():
         if message_lower in ["tienda_online"]:
             return jsonify(
                 {
-                    "response": "Excelente decision. Con el Plan A Vender Se Dijo (3 USD / $9.521 COP) obtienes tu pagina web + tienda online con pasarela de pagos.",
+                    "response": "Excelente decision. Con el Plan A Vender Se Dijo tres dolares obtienes tu pagina web y tienda online con pasarela de pagos",
                     "flow": "choose_plan",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_3"},
@@ -837,11 +844,11 @@ def chat():
         if message_lower in ["chatbot"]:
             return jsonify(
                 {
-                    "response": "Un chatbot con IA te atiende 24/7. Esta incluido en el Plan Que Negociazo (5 USD / $15.869 COP), junto con tu web, tienda, agente de IA e IA-Records.",
+                    "response": "Un chatbot con IA te atiende todo el dia. Esta incluido en el Plan Que Negociazo cinco dolares junto con tu web tienda agente de IA e IA Records",
                     "flow": "choose_plan",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_5"},
-                        {"label": "Que es IA-Records", "value": "ia_records"},
+                        {"label": "Que es IA Records", "value": "ia_records"},
                         {"label": "Volver al menu", "value": "menu"},
                     ],
                     "end_call": False,
@@ -851,7 +858,7 @@ def chat():
         if message_lower in ["agente_ia"]:
             return jsonify(
                 {
-                    "response": "Los agentes de IA automatizan tareas, procesan datos y aprenden de tu negocio. Vienen incluidos en el Plan Que Negociazo.",
+                    "response": "Los agentes de IA automatizan tareas procesan datos y aprenden de tu negocio. Vienen incluidos en el Plan Que Negociazo",
                     "flow": "choose_plan",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_5"},
@@ -865,7 +872,7 @@ def chat():
         if message_lower in ["ia_records"]:
             return jsonify(
                 {
-                    "response": "IA-Records es tu ficha de presentacion potenciada con IA: ayuda a que tus clientes te conozcan y confien mas rapido. Incluido en el Plan Que Negociazo.",
+                    "response": "IA Records es tu ficha de presentacion potenciada con IA. Ayuda a que tus clientes te conozcan y confien mas rapido. Incluido en el Plan Que Negociazo",
                     "flow": "choose_plan",
                     "options": [
                         {"label": "Quiero este plan", "value": "plan_5"},
@@ -904,7 +911,7 @@ def chat():
 
         return jsonify(
             {
-                "response": "No estoy segura de entender. Que te gustaria hacer?",
+                "response": "No estoy segura de entender. Que te gustaria hacer",
                 "flow": flow,
                 "options": [
                     {"label": "Ver planes", "value": "comparar"},
