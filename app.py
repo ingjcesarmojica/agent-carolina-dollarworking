@@ -570,6 +570,26 @@ def chat():
         if message_lower == "lead_form_submitted" and flow == "ask_name":
             return jsonify(get_discovery_web(name))
 
+        if message_lower == "continuar_llamada":
+            if flow == "" or flow == "ask_name":
+                return jsonify(
+                    {
+                        "response": f"Hola {name}, soy Carolina. Continuamos con la conversacion. En que puedo ayudarte?",
+                        "flow": flow,
+                        "options": [],
+                        "end_call": False,
+                    }
+                )
+            else:
+                return jsonify(
+                    {
+                        "response": f"Hola {name}, retomamos donde quedamos. En que puedo ayudarte?",
+                        "flow": flow,
+                        "options": [],
+                        "end_call": False,
+                    }
+                )
+
         if flow == "ask_name":
             cleaned_name = message.strip().title()
             if len(cleaned_name) < 2:
