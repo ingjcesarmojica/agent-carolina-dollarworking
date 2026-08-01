@@ -36,7 +36,7 @@ else:
         "GEMINI_API_KEY no configurada - chat usando respuestas hardcoded"
     )
 
-TTS_VOICE = os.environ.get("TTS_VOICE", "es-AR-ElenaNeural")
+TTS_VOICE = os.environ.get("TTS_VOICE", "es-MX-DaliaNeural")
 TTS_RATE = os.environ.get("TTS_RATE", "+15%")
 
 WHATSAPP_NUMBER = "+573506920726"
