@@ -49,7 +49,7 @@
             padding: 12px 15px;
             border-bottom: 3px solid #ffffff;
             position: relative;
-            height: 150px;
+            height: 180px;
             flex-shrink: 0;
         }
 
@@ -657,12 +657,13 @@
 
         <div class="content-area">
             <div class="chat-view active" id="chatView">
-                <div class="chat-messages" id="chatMessages"></div>
-                <div id="leadFormContainer" class="lead-form" style="display:none;">
-                    <input type="text" id="leadName" placeholder="Nombre completo" autocomplete="name">
-                    <input type="tel" id="leadPhone" placeholder="Celular (ej: +57 300 123 4567)" autocomplete="tel">
-                    <input type="email" id="leadEmail" placeholder="Correo electronico" autocomplete="email">
-                    <button id="leadSubmitBtn" onclick="submitLeadForm()">Enviar</button>
+                <div class="chat-messages" id="chatMessages">
+                    <div id="leadFormContainer" class="lead-form" style="display:none;">
+                        <input type="text" id="leadName" placeholder="Nombre completo" autocomplete="name">
+                        <input type="tel" id="leadPhone" placeholder="Celular (ej: +57 300 123 4567)" autocomplete="tel">
+                        <input type="email" id="leadEmail" placeholder="Correo electronico" autocomplete="email">
+                        <button id="leadSubmitBtn" onclick="submitLeadForm()">Enviar</button>
+                    </div>
                 </div>
                 <div class="chat-input-area" id="chatInputArea">
                     <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)">
@@ -945,6 +946,7 @@
 
         function addMessage(text, sender, options) {
             const container = document.getElementById('chatMessages');
+            const form = document.getElementById('leadFormContainer');
             const msg = document.createElement('div');
             msg.className = `message ${sender}`;
 
@@ -952,7 +954,7 @@
             textSpan.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             msg.appendChild(textSpan);
 
-            container.appendChild(msg);
+            container.insertBefore(msg, form);
 
             if (sender === 'bot' && audioEnabled) {
                 speakMessageAuto(text);
@@ -1035,11 +1037,12 @@
 
         function showTyping() {
             const container = document.getElementById('chatMessages');
+            const form = document.getElementById('leadFormContainer');
             const typing = document.createElement('div');
             typing.className = 'message bot typing';
             typing.id = 'typingIndicator';
             typing.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
-            container.appendChild(typing);
+            container.insertBefore(typing, form);
             container.scrollTop = container.scrollHeight;
             
         }
