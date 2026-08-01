@@ -37,11 +37,10 @@
         }
 
         .header {
-            text-align: center;
-            padding: 12px 20px 10px;
             flex-shrink: 0;
-            background: #306eff;
+            background: url('/static/images/modelofooter.png') center/cover no-repeat;
             border-bottom: 2px solid #ffffff;
+            height: 160px;
         }
 
         .header-title {
@@ -537,20 +536,6 @@
         <div class="error-message" id="errorMessage"></div>
 
         <div class="header">
-            <div class="header-title">Dollar Working</div>
-            <div class="profile-section">
-                <div class="online-badge">En linea</div>
-                <div class="avatar-container">
-                    <div class="avatar"></div>
-                    <div class="pulse-rings" id="pulseRings">
-                        <div class="pulse-ring"></div>
-                        <div class="pulse-ring"></div>
-                        <div class="pulse-ring"></div>
-                    </div>
-                </div>
-                <div class="profile-name">Carolina</div>
-                <div class="profile-title">Asesora Virtual</div>
-            </div>
         </div>
 
         <div class="mode-toggle">
@@ -860,13 +845,13 @@
             typing.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
             container.appendChild(typing);
             container.scrollTop = container.scrollHeight;
-            document.getElementById('pulseRings').classList.add('active');
+            const pr = document.getElementById('pulseRings'); if (pr) pr.classList.add('active');
         }
 
         function hideTyping() {
             const typing = document.getElementById('typingIndicator');
             if (typing) typing.remove();
-            document.getElementById('pulseRings').classList.remove('active');
+            const pr = document.getElementById('pulseRings'); if (pr) pr.classList.remove('active');
         }
 
         function speakMessageAuto(text) {
@@ -942,7 +927,7 @@
             const callView = document.getElementById('callView');
             callView.classList.remove('calling');
             document.getElementById('buttonLabel').textContent = 'Llamar';
-            document.getElementById('pulseRings').classList.remove('active');
+            const pr = document.getElementById('pulseRings'); if (pr) pr.classList.remove('active');
 
             if (currentMode === 'call') {
                 document.getElementById('statusIndicator').textContent = 'Llamada finalizada';
@@ -998,7 +983,7 @@
             isSpeaking = true;
             stopRingtone();
             document.getElementById('statusIndicator').textContent = "Hablando...";
-            document.getElementById('pulseRings').classList.add('active');
+            const pr = document.getElementById('pulseRings'); if (pr) pr.classList.add('active');
 
             fetch(SPEAK_API_URL, {
                 method: 'POST',
@@ -1013,7 +998,7 @@
                     currentAudio.onended = function() {
                         isSpeaking = false;
                         currentAudio = null;
-                        document.getElementById('pulseRings').classList.remove('active');
+                        const pr = document.getElementById('pulseRings'); if (pr) pr.classList.remove('active');
                         if (!isCalling) return;
                         if (endCallAfter) {
                             endCall();
@@ -1024,7 +1009,7 @@
                     currentAudio.onerror = function() {
                         isSpeaking = false;
                         currentAudio = null;
-                        document.getElementById('pulseRings').classList.remove('active');
+                        const pr = document.getElementById('pulseRings'); if (pr) pr.classList.remove('active');
                         if (!isCalling) return;
                         if (endCallAfter) endCall();
                         else startListening();
@@ -1032,7 +1017,7 @@
                     currentAudio.play();
                 } else {
                     isSpeaking = false;
-                    document.getElementById('pulseRings').classList.remove('active');
+                    const pr = document.getElementById('pulseRings'); if (pr) pr.classList.remove('active');
                     if (!isCalling) return;
                     if (endCallAfter) endCall();
                     else startListening();
@@ -1040,7 +1025,7 @@
             })
             .catch(() => {
                 isSpeaking = false;
-                document.getElementById('pulseRings').classList.remove('active');
+                const pr = document.getElementById('pulseRings'); if (pr) pr.classList.remove('active');
                 if (!isCalling) return;
                 if (endCallAfter) endCall();
                 else startListening();
