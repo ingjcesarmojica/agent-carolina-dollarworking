@@ -36,15 +36,18 @@ else:
         "GEMINI_API_KEY no configurada - chat usando respuestas hardcoded"
     )
 
-TTS_VOICE = os.environ.get("TTS_VOICE", "es-CO-SalomeNeural")
+TTS_VOICE = os.environ.get("TTS_VOICE", "es-AR-ElenaNeural")
+TTS_RATE = os.environ.get("TTS_RATE", "+15%")
 
 WHATSAPP_NUMBER = "+573506920726"
 
 
-async def generate_edge_tts(text, voice=None):
+async def generate_edge_tts(text, voice=None, rate=None):
     if voice is None:
         voice = TTS_VOICE
-    communicate = edge_tts.Communicate(text, voice)
+    if rate is None:
+        rate = TTS_RATE
+    communicate = edge_tts.Communicate(text, voice, rate=rate)
     tmp_path = os.path.join(os.path.dirname(__file__), "tmp_audio.mp3")
     await communicate.save(tmp_path)
     with open(tmp_path, "rb") as f:
