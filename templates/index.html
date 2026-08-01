@@ -391,9 +391,20 @@
             padding: 10px 15px 15px;
             display: flex;
             gap: 8px;
-            background: #306eff;
+            background: #141740;
             flex-shrink: 0;
             border-top: 1px solid #ffffff;
+        }
+
+        .send-btn-wrapper {
+            background: #306eff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .chat-input {
@@ -539,11 +550,13 @@
                 <div class="chat-messages" id="chatMessages"></div>
                 <div class="chat-input-area">
                     <input type="text" class="chat-input" id="chatInput" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)">
-                    <button class="send-btn" id="sendBtn" onclick="sendChatText()">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                        </svg>
-                    </button>
+                    <div class="send-btn-wrapper">
+                        <button class="send-btn" id="sendBtn" onclick="sendChatText()">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
